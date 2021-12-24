@@ -27,6 +27,21 @@ impl io::Write for HtmlWriter {
 ///
 /// `to` is expected to be a path to a html file. (and you should exclude it
 /// from vcs)
+///
+///
+/// # Example
+///
+/// While testing, you can print to the console at a same time.
+/// just call `.with()` after `.finish()`.
+///
+/// ```no_run
+/// 
+/// let logger = tracing_subscriber::FmtSubscriber::builder()
+///     .with_test_writer()
+///     .pretty()
+///     .finish()
+///     .with(html_layer("simple1.html".into())?);
+/// ```
 pub fn html_layer<S>(output: PathBuf) -> Result<impl Layer<S>, Error>
 where
     S: Subscriber + for<'a> LookupSpan<'a>,
