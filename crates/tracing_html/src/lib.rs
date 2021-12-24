@@ -6,7 +6,7 @@ use std::{
     path::PathBuf,
     sync::Mutex,
 };
-use tracing::{Level, Subscriber};
+use tracing::Subscriber;
 use tracing_subscriber::{registry::LookupSpan, Layer};
 
 struct HtmlWriter {
