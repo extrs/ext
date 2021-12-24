@@ -1,3 +1,4 @@
+import React from "react";
 import { TraceEvent } from "../types";
 
 export interface AppProps {

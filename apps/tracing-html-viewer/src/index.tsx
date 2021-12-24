@@ -1,9 +1,16 @@
+import React from "react";
 import ReactDOM from "react-dom";
 import App from "./viewer/App";
 
 const root = document.getElementById("root")!;
 const traceDataEl = document.getElementById("trace-data")!;
 
-console.log(traceDataEl);
+const traceDataStr = traceDataEl.innerText;
 
-ReactDOM.render(<App />, root);
+const events = traceDataStr
+  .split("\n")
+  .filter((v) => !!v)
+  .map((v) => JSON.parse(v));
+console.log(events);
+
+ReactDOM.render(<App events={events} />, root);
