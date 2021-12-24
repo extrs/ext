@@ -54,7 +54,7 @@ fn instrument_nested() -> Result<(), Error> {
     let _guard = init("instrument_nested.html")?;
 
     #[tracing::instrument]
-    fn call() {
+    fn call(arg: usize) {
         tracing::info!("Hello, world!");
         call2();
     }
@@ -65,7 +65,7 @@ fn instrument_nested() -> Result<(), Error> {
     }
 
     tracing::error!("Hello, world!");
-    call();
+    call(10);
 
     Ok(())
 }

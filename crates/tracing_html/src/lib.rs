@@ -6,7 +6,7 @@ use std::{
     path::PathBuf,
     sync::Mutex,
 };
-use tracing::Subscriber;
+use tracing::{Level, Subscriber};
 use tracing_subscriber::{registry::LookupSpan, Layer};
 
 struct HtmlWriter {
@@ -90,6 +90,10 @@ where
     let writer = HtmlWriter { js_path, wr };
 
     Ok(tracing_subscriber::fmt::layer()
+        .with_level(true)
+        .with_target(true)
+        .with_thread_ids(true)
+        .with_thread_names(true)
         .json()
         .with_writer(Mutex::new(writer)))
 }
