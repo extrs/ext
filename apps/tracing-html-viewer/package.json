@@ -1,0 +1,10 @@
+{
+  "name": "tracing-html-viewer",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "typescript": "^4.5.4"
+  }
+}
