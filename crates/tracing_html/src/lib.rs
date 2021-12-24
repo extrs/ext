@@ -10,6 +10,7 @@ use tracing::Subscriber;
 use tracing_subscriber::{registry::LookupSpan, Layer};
 
 struct HtmlWriter {
+    js_path: PathBuf,
     wr: BufWriter<File>,
 }
 
@@ -27,11 +28,14 @@ impl Drop for HtmlWriter {
     fn drop(&mut self) {
         write!(
             self.wr,
-            "</script>
+            r#"</script>
         </head>
         <body>
+            <div id="root"></div>
+            <script src="{js_path}"></script>
         </body>
-    </html>"
+    </html>"#,
+            js_path = self.js_path.display()
         )
         .expect("failed to write tail");
     }
@@ -79,15 +83,11 @@ where
         r#"
     <html>
         <head>
-            <script src="{js_path}"></script>
             <script type="text/trace-data">
-        
-            
     "#,
-        js_path = js_path.display()
     )?;
 
-    let writer = HtmlWriter { wr };
+    let writer = HtmlWriter { js_path, wr };
 
     Ok(tracing_subscriber::fmt::layer()
         .json()

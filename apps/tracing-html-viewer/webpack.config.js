@@ -24,5 +24,9 @@ module.exports = {
                 }
             }
         ],
-    }
+    },
+
+    resolve: {
+        extensions: [".js", ".ts", ".json", ".tsx", ".css"],
+    },
 }

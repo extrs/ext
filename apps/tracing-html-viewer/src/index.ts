@@ -1,5 +1,7 @@
 import ReactDOM from 'react-dom';
+import App from './viewer/App';
 
-export default function render(element: any, data: string) {
-    ReactDOM.render(element, container)
-}
+
+const root = document.getElementById('root')!;
+
+ReactDOM.render(new App(), root);
