@@ -55,8 +55,10 @@ fn instrument_nested() -> Result<(), Error> {
 
     #[tracing::instrument]
     fn call(arg: usize) {
-        tracing::info!("Hello, world!");
-        call2();
+        for _ in 0..5 {
+            tracing::info!("Hello, world!");
+            call2();
+        }
     }
 
     #[tracing::instrument]
