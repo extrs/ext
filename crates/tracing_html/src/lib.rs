@@ -1,5 +1,6 @@
-use anyhow::Error;
+use anyhow::{Context, Error};
 use std::{
+    env,
     fs::{self, File},
     io::{self, BufWriter, Write},
     path::PathBuf,
@@ -9,7 +10,6 @@ use tracing::Subscriber;
 use tracing_subscriber::{registry::LookupSpan, Layer};
 
 struct HtmlWriter {
-    to: PathBuf,
     wr: BufWriter<File>,
 }
 
@@ -20,6 +20,20 @@ impl io::Write for HtmlWriter {
 
     fn flush(&mut self) -> io::Result<()> {
         self.wr.flush()
+    }
+}
+
+impl Drop for HtmlWriter {
+    fn drop(&mut self) {
+        write!(
+            self.wr,
+            "</script>
+        </head>
+        <body>
+        </body>
+    </html>"
+        )
+        .expect("failed to write tail");
     }
 }
 
@@ -54,12 +68,26 @@ where
         .write(true)
         .open(&output)
         .unwrap();
+    let js_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap())
+        .join("../../apps/tracing-html-viewer/dist/main.js");
+    let js_path = js_path.canonicalize().context("failed to canonicalize")?;
 
     let mut wr = BufWriter::new(file);
 
-    write!(wr, "<html>")?;
+    write!(
+        wr,
+        r#"
+    <html>
+        <head>
+            <script src="{js_path}"></script>
+            <script type="text/trace-data">
+        
+            
+    "#,
+        js_path = js_path.display()
+    )?;
 
-    let writer = HtmlWriter { to: output, wr };
+    let writer = HtmlWriter { wr };
 
     Ok(tracing_subscriber::fmt::layer()
         .json()
