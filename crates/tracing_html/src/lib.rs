@@ -35,12 +35,14 @@ impl io::Write for HtmlWriter {
 /// just call `.with()` after `.finish()`.
 ///
 /// ```no_run
-/// 
+/// use tracing_html::html_layer;
+/// use tracing_subscriber::prelude::*;
+///
 /// let logger = tracing_subscriber::FmtSubscriber::builder()
 ///     .with_test_writer()
 ///     .pretty()
 ///     .finish()
-///     .with(html_layer("simple1.html".into())?);
+///     .with(html_layer("simple1.html".into()).unwrap());
 /// ```
 pub fn html_layer<S>(output: PathBuf) -> Result<impl Layer<S>, Error>
 where
