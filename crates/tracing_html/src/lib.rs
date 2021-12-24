@@ -83,7 +83,7 @@ where
         r#"
     <html>
         <head>
-            <script type="text/trace-data">
+            <script id="trace-data" type="text/trace-data">
     "#,
     )?;
 
