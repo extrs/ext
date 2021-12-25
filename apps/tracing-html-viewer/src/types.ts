@@ -1,23 +1,31 @@
 
 
 export interface TraceEvent {
-    fields: {
-        message: string
-    },
-
-    span?: Span
-    spans?: Span[]
-
-    level: string
-    target: string
-    threadId: string
-    threadName: string
-
-    timestamp: string
+    metadata: Metadata
+    fields: { [key: string]: string }
 }
 
-export interface Span {
-    name: string
+export interface SpanTraceData {
+    closedAt: string | null
+    enteredAt: string
+    events: TraceEvent[]
 
-    [field: string]: string
+    spans: [id: string, data: SpanTraceData][]
+}
+
+export interface SpanDecl {
+    attrs: { [key: string]: string }
+    metadata: Metadata
+}
+
+export interface Metadata {
+    level: string
+
+    name: string
+    target: string
+
+    file: string | null
+    line: number | null
+
+    modulePath: string | null
 }
