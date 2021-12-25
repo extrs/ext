@@ -1,44 +1,71 @@
-use anyhow::{Context, Error};
+use anyhow::{Context as _, Error};
+use serde::Serialize;
 use std::{
     env,
     fs::{self, File},
-    io::{self, BufWriter, Write},
+    io::{BufWriter, Write},
     path::PathBuf,
     sync::Mutex,
 };
-use tracing::Subscriber;
-use tracing_subscriber::{registry::LookupSpan, Layer};
+use tracing::{
+    span::{Attributes, Record},
+    Id, Subscriber,
+};
+use tracing_subscriber::{layer::Context, registry::LookupSpan, Layer};
 
-struct HtmlWriter {
+struct HtmlLayer {
     js_path: PathBuf,
     wr: BufWriter<File>,
+    events: Mutex<Vec<Event>>,
 }
 
-impl io::Write for HtmlWriter {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.wr.write(buf)
-    }
+#[derive(Debug, Serialize)]
+struct Event {}
 
-    fn flush(&mut self) -> io::Result<()> {
-        self.wr.flush()
-    }
-}
-
-impl Drop for HtmlWriter {
+impl Drop for HtmlLayer {
     fn drop(&mut self) {
+        let data = serde_json::to_string(&self.events).unwrap();
+
         write!(
             self.wr,
-            r#"</script>
-        </head>
-        <body>
-            <div id="root"></div>
-            <script src="{js_path}"></script>
-        </body>
-    </html>"#,
-            js_path = self.js_path.display()
+            r#"
+<html>
+    <head>
+        <script id="trace-data" type="text/trace-data">
+        {data}
+        </script>
+    </head>
+    <body>
+        <div id="root"></div>
+        <script src="{js_path}"></script>
+    </body>
+</html>"#,
+            js_path = self.js_path.display(),
+            data = data
         )
         .expect("failed to write tail");
     }
+}
+
+impl<S> Layer<S> for HtmlLayer
+where
+    S: Subscriber,
+{
+    fn on_new_span(&self, attrs: &Attributes<'_>, id: &Id, ctx: Context<'_, S>) {}
+
+    fn on_record(&self, span: &Id, values: &Record<'_>, ctx: Context<'_, S>) {}
+
+    fn on_follows_from(&self, span: &Id, follows: &Id, ctx: Context<'_, S>) {}
+
+    fn on_event(&self, _event: &tracing::Event<'_>, ctx: Context<'_, S>) {}
+
+    fn on_enter(&self, _id: &Id, ctx: Context<'_, S>) {}
+
+    fn on_exit(&self, _id: &Id, ctx: Context<'_, S>) {}
+
+    fn on_close(&self, _id: Id, ctx: Context<'_, S>) {}
+
+    fn on_id_change(&self, old: &Id, new: &Id, ctx: Context<'_, S>) {}
 }
 
 /// Create a new `Layer` that will write the log messages to a html file.
@@ -76,24 +103,11 @@ where
         .join("../../apps/tracing-html-viewer/dist/main.js");
     let js_path = js_path.canonicalize().context("failed to canonicalize")?;
 
-    let mut wr = BufWriter::new(file);
+    let wr = BufWriter::new(file);
 
-    write!(
+    Ok(HtmlLayer {
+        js_path,
         wr,
-        r#"
-    <html>
-        <head>
-            <script id="trace-data" type="text/trace-data">
-    "#,
-    )?;
-
-    let writer = HtmlWriter { js_path, wr };
-
-    Ok(tracing_subscriber::fmt::layer()
-        .with_level(true)
-        .with_target(true)
-        .with_thread_ids(true)
-        .with_thread_names(true)
-        .json()
-        .with_writer(Mutex::new(writer)))
+        events: Default::default(),
+    })
 }
