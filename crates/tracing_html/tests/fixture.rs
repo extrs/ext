@@ -1,5 +1,5 @@
 use anyhow::Error;
-use tracing::{debug, error, info, trace, warn};
+use tracing::{debug, error, info, trace, warn, Level};
 use tracing_html::html_layer;
 use tracing_subscriber::prelude::*;
 
@@ -8,6 +8,7 @@ fn init(name: &str) -> Result<tracing::dispatcher::DefaultGuard, Error> {
         .without_time()
         .with_target(false)
         .with_ansi(true)
+        .with_max_level(Level::TRACE)
         .with_test_writer()
         .pretty()
         .finish()
