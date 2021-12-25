@@ -83,12 +83,12 @@ impl SpanData {
         F: FnOnce(&mut SpanData) -> Ret,
     {
         if let Some(parent) = parent {
-            if let Some((_, parent)) = self
+            if let Some((_, v)) = self
                 .spans
                 .iter_mut()
-                .find(|(id, _)| *id == parent.into_u64())
+                .find(|(id, v)| *id == parent.into_u64() && !v.is_closed)
             {
-                op(parent)
+                op(v)
             } else {
                 unreachable!("{:?} is not a child of {:?}", parent, self)
             }
@@ -97,19 +97,33 @@ impl SpanData {
         }
     }
 
-    fn add_span(&mut self, parent: Option<&Id>, attrs: &Attributes<'_>, id: &Id) {}
+    fn add_span(&mut self, parent: Option<&Id>, attrs: &Attributes<'_>, id: &Id) {
+        self.with(parent, |s| {});
+    }
 
-    fn add_record(&mut self, parent: Option<&Id>, span: &Id, values: &Record) {}
+    fn add_record(&mut self, parent: Option<&Id>, span: &Id, values: &Record) {
+        self.with(parent, |s| {});
+    }
 
-    fn add_event(&mut self, parent: Option<&Id>, event: &tracing::Event) {}
+    fn add_event(&mut self, parent: Option<&Id>, event: &tracing::Event) {
+        self.with(parent, |s| {});
+    }
 
-    fn enter_span(&mut self, parent: Option<&Id>, id: &Id) {}
+    fn enter_span(&mut self, parent: Option<&Id>, id: &Id) {
+        self.with(parent, |s| {});
+    }
 
-    fn exit_span(&mut self, parent: Option<&Id>, id: &Id) {}
+    fn exit_span(&mut self, parent: Option<&Id>, id: &Id) {
+        self.with(parent, |s| {});
+    }
 
-    fn close_span(&mut self, parent: Option<&Id>, id: Id) {}
+    fn close_span(&mut self, parent: Option<&Id>, id: Id) {
+        self.with(parent, |s| {});
+    }
 
-    fn change_id(&mut self, parent: Option<&Id>, old: &Id, new: &Id) {}
+    fn change_id(&mut self, parent: Option<&Id>, old: &Id, new: &Id) {
+        self.with(parent, |s| {});
+    }
 }
 
 impl<S> Layer<S> for HtmlLayer
