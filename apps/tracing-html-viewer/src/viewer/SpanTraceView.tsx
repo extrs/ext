@@ -78,7 +78,9 @@ const SpanTraceView: React.FC<SpanViewProps> = ({ spanDecls, id, data }) => {
             {data.events.length > 0 && (
               <div>
                 {data.events.map((e, idx) => (
-                  <EventView key={idx} event={e}></EventView>
+                  <div key={idx} style={{ marginTop: 12 }}>
+                    <EventView event={e}></EventView>
+                  </div>
                 ))}
               </div>
             )}

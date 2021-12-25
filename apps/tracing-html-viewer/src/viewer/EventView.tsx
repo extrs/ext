@@ -28,7 +28,7 @@ function colorFor(level: string) {
 
 const EventView: React.FC<EventViewProps> = ({ event }) => {
   return (
-    <div>
+    <div style={{ display: "inline-block" }}>
       <Accordion style={{ background: colorFor(event.metadata.level) }}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
