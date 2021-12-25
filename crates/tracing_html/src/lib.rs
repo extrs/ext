@@ -130,7 +130,7 @@ impl SpanTraceData {
         }
     }
 
-    fn add_span(&mut self, parent: Option<&Id>, attrs: &Attributes<'_>, id: &Id) {
+    fn add_span(&mut self, parent: Option<&Id>, id: &Id) {
         self.with(parent, |s| {
             s.spans.push((id.into_u64(), SpanTraceData::default()));
         });
@@ -174,7 +174,7 @@ where
             // TODO: Attributes
             // TODO: Metadata
         }
-        w.root.add_span(ctx.current_span().id(), attrs, id);
+        w.root.add_span(ctx.current_span().id(), id);
     }
 
     fn on_record(&self, span: &Id, values: &Record<'_>, ctx: Context<'_, S>) {
