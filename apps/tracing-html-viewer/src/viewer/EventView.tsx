@@ -10,10 +10,26 @@ export interface EventViewProps {
   event: TraceEvent;
 }
 
+function colorFor(level: string) {
+  switch (level) {
+    case "INFO":
+      return "#00bcd4";
+    case "ERROR":
+      return "#f44336";
+    case "DEBUG":
+      return "#4caf50";
+    case "WARN":
+      return "#ffc107";
+    case "TRACE":
+      return "#9e9e9e";
+  }
+  throw new Error(`Unknown level: ${level}`);
+}
+
 const EventView: React.FC<EventViewProps> = ({ event }) => {
   return (
     <div>
-      <Accordion>
+      <Accordion style={{ background: colorFor(event.metadata.level) }}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel1a-content"
