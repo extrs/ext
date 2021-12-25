@@ -20,6 +20,7 @@ use tracing_subscriber::{layer::Context, registry::LookupSpan, Layer};
 type Fields = HashMap<&'static str, String, ahash::RandomState>;
 
 struct HtmlLayer {
+    #[allow(dead_code)]
     output_path: PathBuf,
 
     js_path: PathBuf,
@@ -169,6 +170,7 @@ impl SpanTraceData {
         });
     }
 
+    #[allow(unused_variables)]
     fn add_record(&mut self, parent: Option<&Id>, span: &Id, values: &Record) {
         self.with(parent, |s| {});
     }
