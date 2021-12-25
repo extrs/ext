@@ -28,7 +28,7 @@ struct HtmlLayer {
 struct TraceData {
     span_decls: HashMap<u64, SpanDecl, ahash::RandomState>,
     /// The root span
-    span: SpanTraceData,
+    root: SpanTraceData,
 }
 
 #[derive(Debug, Default, Serialize)]
@@ -174,14 +174,14 @@ where
             // TODO: Attributes
             // TODO: Metadata
         }
-        w.span.add_span(ctx.current_span().id(), attrs, id);
+        w.root.add_span(ctx.current_span().id(), attrs, id);
     }
 
     fn on_record(&self, span: &Id, values: &Record<'_>, ctx: Context<'_, S>) {
         self.data
             .lock()
             .unwrap()
-            .span
+            .root
             .add_record(ctx.current_span().id(), span, values);
     }
 
@@ -189,7 +189,7 @@ where
         self.data
             .lock()
             .unwrap()
-            .span
+            .root
             .add_event(ctx.current_span().id(), event);
     }
 
@@ -197,7 +197,7 @@ where
         self.data
             .lock()
             .unwrap()
-            .span
+            .root
             .enter_span(ctx.current_span().id(), id);
     }
 
@@ -205,7 +205,7 @@ where
         self.data
             .lock()
             .unwrap()
-            .span
+            .root
             .exit_span(ctx.current_span().id(), id);
     }
 
@@ -213,7 +213,7 @@ where
         self.data
             .lock()
             .unwrap()
-            .span
+            .root
             .close_span(ctx.current_span().id(), id);
     }
 
@@ -221,7 +221,7 @@ where
         self.data
             .lock()
             .unwrap()
-            .span
+            .root
             .change_id(ctx.current_span().id(), old, new);
     }
 }
