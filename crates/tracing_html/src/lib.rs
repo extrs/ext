@@ -4,16 +4,20 @@ use serde::Serialize;
 use std::{
     collections::HashMap,
     env,
+    fmt::Debug,
     fs::{self, File},
     io::{BufWriter, Write},
     path::PathBuf,
     sync::Mutex,
 };
 use tracing::{
+    field::Field,
     span::{Attributes, Record},
     Id, Subscriber,
 };
 use tracing_subscriber::{layer::Context, registry::LookupSpan, Layer};
+
+type Fields = HashMap<&'static str, String, ahash::RandomState>;
 
 struct HtmlLayer {
     output_path: PathBuf,
@@ -34,7 +38,7 @@ struct TraceData {
 #[derive(Debug, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct SpanDecl {
-    attrs: HashMap<&'static str, String, ahash::RandomState>,
+    attrs: Fields,
 }
 
 /// Events of a span.
@@ -63,10 +67,8 @@ impl Default for SpanTraceData {
 }
 
 #[derive(Debug, Serialize)]
-#[serde(tag = "type")]
-enum Event {
-    #[serde(rename = "span")]
-    Span(SpanTraceData),
+struct Event {
+    fields: Fields,
 }
 
 impl Drop for HtmlLayer {
@@ -141,7 +143,14 @@ impl SpanTraceData {
     }
 
     fn add_event(&mut self, parent: Option<&Id>, event: &tracing::Event) {
-        self.with(parent, |s| {});
+        self.with(parent, |s| {
+            let mut fields = Fields::default();
+            event.record(&mut |f: &Field, v: &dyn Debug| {
+                fields.insert(f.name(), format!("{:?}", v));
+            });
+
+            s.events.push(Event { fields });
+        });
     }
 
     fn enter_span(&mut self, parent: Option<&Id>, id: &Id) {
@@ -153,11 +162,23 @@ impl SpanTraceData {
     }
 
     fn close_span(&mut self, parent: Option<&Id>, id: Id) {
-        self.with(parent, |s| {});
+        self.with(parent, |s| {
+            for (child_id, v) in s.spans.iter_mut() {
+                if *child_id == id.into_u64() {
+                    v.is_closed = true;
+                }
+            }
+        });
     }
 
     fn change_id(&mut self, parent: Option<&Id>, old: &Id, new: &Id) {
-        self.with(parent, |s| {});
+        self.with(parent, |s| {
+            for (id, _) in s.spans.iter_mut() {
+                if *id == old.into_u64() {
+                    *id = new.into_u64();
+                }
+            }
+        });
     }
 }
 
@@ -169,9 +190,11 @@ where
         let mut w = self.data.lock().unwrap();
 
         {
-            let mut v = w.span_decls.entry(id.into_u64()).or_default();
+            let decl = w.span_decls.entry(id.into_u64()).or_default();
 
-            // TODO: Attributes
+            attrs.record(&mut |f: &Field, v: &dyn Debug| {
+                decl.attrs.insert(f.name(), format!("{:?}", v));
+            });
             // TODO: Metadata
         }
         w.root.add_span(ctx.current_span().id(), id);
