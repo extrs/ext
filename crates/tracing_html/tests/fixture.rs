@@ -68,6 +68,8 @@ fn instrument_nested() -> Result<(), Error> {
 
     tracing::error!("Hello, world!");
     call(10);
+    call(5);
+    call(2);
 
     Ok(())
 }

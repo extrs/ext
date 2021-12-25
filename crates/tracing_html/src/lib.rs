@@ -45,23 +45,25 @@ struct SpanDecl {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct SpanTraceData {
-    #[serde(skip)]
-    is_closed: bool,
+    exited_at: Option<NaiveDateTime>,
+
+    closed_at: Option<NaiveDateTime>,
 
     events: Vec<Event>,
 
     spans: Vec<(u64, SpanTraceData)>,
 
-    time: NaiveDateTime,
+    enter_at: NaiveDateTime,
 }
 
 impl Default for SpanTraceData {
     fn default() -> Self {
         Self {
-            time: Utc::now().naive_local(),
-            is_closed: Default::default(),
+            enter_at: Utc::now().naive_local(),
+            exited_at: Default::default(),
             events: Default::default(),
             spans: Default::default(),
+            closed_at: Default::default(),
         }
     }
 }
@@ -106,7 +108,8 @@ impl SpanTraceData {
         // Recursive
         fn find<'a>(from: &'a mut SpanTraceData, id: &Id) -> Option<&'a mut SpanTraceData> {
             for (child_id, span) in &mut from.spans {
-                if span.is_closed {
+                // Ignore if the span is already closed
+                if span.exited_at.is_some() {
                     continue;
                 }
 
@@ -154,18 +157,26 @@ impl SpanTraceData {
     }
 
     fn enter_span(&mut self, parent: Option<&Id>, id: &Id) {
-        self.with(parent, |s| {});
+        self.with(parent, |s| {
+            s.spans.push((id.into_u64(), SpanTraceData::default()));
+        });
     }
 
     fn exit_span(&mut self, parent: Option<&Id>, id: &Id) {
-        self.with(parent, |s| {});
+        self.with(parent, |s| {
+            for (child_id, v) in s.spans.iter_mut() {
+                if *child_id == id.into_u64() {
+                    v.exited_at = Some(Utc::now().naive_local());
+                }
+            }
+        });
     }
 
     fn close_span(&mut self, parent: Option<&Id>, id: Id) {
         self.with(parent, |s| {
             for (child_id, v) in s.spans.iter_mut() {
                 if *child_id == id.into_u64() {
-                    v.is_closed = true;
+                    v.closed_at = Some(Utc::now().naive_local());
                 }
             }
         });
