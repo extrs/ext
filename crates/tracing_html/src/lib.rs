@@ -74,25 +74,74 @@ impl Drop for HtmlLayer {
     }
 }
 
+impl SpanData {
+    fn add_span(&mut self, parent: Option<&Id>, attrs: &Attributes<'_>, id: &Id) {}
+
+    fn add_record(&mut self, parent: Option<&Id>, span: &Id, values: &Record) {}
+
+    fn add_event(&mut self, parent: Option<&Id>, event: &tracing::Event) {}
+
+    fn enter_span(&mut self, parent: Option<&Id>, id: &Id) {}
+
+    fn exit_span(&mut self, parent: Option<&Id>, id: &Id) {}
+
+    fn close_span(&mut self, parent: Option<&Id>, id: Id) {}
+
+    fn change_id(&mut self, parent: Option<&Id>, old: &Id, new: &Id) {}
+}
+
 impl<S> Layer<S> for HtmlLayer
 where
     S: Subscriber,
 {
-    fn on_new_span(&self, attrs: &Attributes<'_>, id: &Id, ctx: Context<'_, S>) {}
+    fn on_new_span(&self, attrs: &Attributes<'_>, id: &Id, ctx: Context<'_, S>) {
+        self.span
+            .lock()
+            .unwrap()
+            .add_span(ctx.current_span().id(), attrs, id);
+    }
 
-    fn on_record(&self, span: &Id, values: &Record<'_>, ctx: Context<'_, S>) {}
+    fn on_record(&self, span: &Id, values: &Record<'_>, ctx: Context<'_, S>) {
+        self.span
+            .lock()
+            .unwrap()
+            .add_record(ctx.current_span().id(), span, values);
+    }
 
-    fn on_follows_from(&self, span: &Id, follows: &Id, ctx: Context<'_, S>) {}
+    fn on_event(&self, event: &tracing::Event<'_>, ctx: Context<'_, S>) {
+        self.span
+            .lock()
+            .unwrap()
+            .add_event(ctx.current_span().id(), event);
+    }
 
-    fn on_event(&self, event: &tracing::Event<'_>, ctx: Context<'_, S>) {}
+    fn on_enter(&self, id: &Id, ctx: Context<'_, S>) {
+        self.span
+            .lock()
+            .unwrap()
+            .enter_span(ctx.current_span().id(), id);
+    }
 
-    fn on_enter(&self, id: &Id, ctx: Context<'_, S>) {}
+    fn on_exit(&self, id: &Id, ctx: Context<'_, S>) {
+        self.span
+            .lock()
+            .unwrap()
+            .exit_span(ctx.current_span().id(), id);
+    }
 
-    fn on_exit(&self, id: &Id, ctx: Context<'_, S>) {}
+    fn on_close(&self, id: Id, ctx: Context<'_, S>) {
+        self.span
+            .lock()
+            .unwrap()
+            .close_span(ctx.current_span().id(), id);
+    }
 
-    fn on_close(&self, id: Id, ctx: Context<'_, S>) {}
-
-    fn on_id_change(&self, old: &Id, new: &Id, ctx: Context<'_, S>) {}
+    fn on_id_change(&self, old: &Id, new: &Id, ctx: Context<'_, S>) {
+        self.span
+            .lock()
+            .unwrap()
+            .change_id(ctx.current_span().id(), old, new);
+    }
 }
 
 /// Create a new `Layer` that will write the log messages to a html file.
