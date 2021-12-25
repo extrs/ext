@@ -1,5 +1,9 @@
 
 
+export type SpanDecls = {
+    [id: number]: SpanDecl;
+}
+
 export interface TraceEvent {
     metadata: Metadata
     fields: { [key: string]: string }
@@ -10,7 +14,7 @@ export interface SpanTraceData {
     enteredAt: string
     events: TraceEvent[]
 
-    spans: [id: string, data: SpanTraceData][]
+    spans: [id: number, data: SpanTraceData][]
 }
 
 export interface SpanDecl {

@@ -1,13 +1,18 @@
 import React from "react";
-import { SpanDecl, SpanTraceData, TraceEvent } from "../types";
+import { SpanDecls, SpanTraceData } from "../types";
+import SpanView from "./SpanTraceView";
 
 export interface AppProps {
-  spanDecls: { [id: number]: SpanDecl };
+  spanDecls: SpanDecls;
   root: SpanTraceData;
 }
 
 const App: React.FC<AppProps> = ({ spanDecls, root }) => {
-  return <div></div>;
+  return (
+    <div>
+      <SpanView spanDecls={spanDecls} data={root} />
+    </div>
+  );
 };
 
 export default App;
