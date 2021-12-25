@@ -9,7 +9,7 @@ export interface AppProps {
 
 const App: React.FC<AppProps> = ({ spanDecls, root }) => {
   return (
-    <div style={{ overflowX: "auto", width: "100vw" }}>
+    <div style={{ overflowX: "auto", width: "calc(100vw - 56px)" }}>
       <SpanTraceView spanDecls={spanDecls} data={root} />
     </div>
   );

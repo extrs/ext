@@ -2,6 +2,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import React, { useState } from "react";
 import { SpanDecls, SpanTraceData } from "../types";
+import EventView from "./EventView";
 
 export interface SpanViewProps {
   spanDecls: SpanDecls;
@@ -73,6 +74,14 @@ const SpanTraceView: React.FC<SpanViewProps> = ({ spanDecls, id, data }) => {
               </p>
               <p>Ended: {data.exitedAt ?? `<Unknown>`}</p>
             </div>
+
+            {data.events.length > 0 && (
+              <div>
+                {data.events.map((e, idx) => (
+                  <EventView key={idx} event={e}></EventView>
+                ))}
+              </div>
+            )}
 
             {data.spans.length > 0 && (
               <div>
