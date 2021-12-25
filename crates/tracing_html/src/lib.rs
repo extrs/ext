@@ -24,6 +24,7 @@ struct HtmlLayer {
 }
 
 #[derive(Debug, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
 struct TraceData {
     span_decls: HashMap<u64, SpanDecl, ahash::RandomState>,
     /// The root span
@@ -31,12 +32,14 @@ struct TraceData {
 }
 
 #[derive(Debug, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
 struct SpanDecl {
     attrs: HashMap<&'static str, String, ahash::RandomState>,
 }
 
 /// Events of a span.
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 struct SpanTraceData {
     #[serde(skip)]
     is_closed: bool,
