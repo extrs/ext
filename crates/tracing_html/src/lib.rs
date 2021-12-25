@@ -75,21 +75,24 @@ struct SpanTraceData {
 
     closed_at: Option<NaiveDateTime>,
 
+    entered_at: Option<NaiveDateTime>,
+
+    created_at: NaiveDateTime,
+
     events: Vec<Event>,
 
     spans: Vec<(u64, SpanTraceData)>,
-
-    entered_at: NaiveDateTime,
 }
 
 impl Default for SpanTraceData {
     fn default() -> Self {
         Self {
-            entered_at: Utc::now().naive_local(),
+            created_at: Utc::now().naive_local(),
             exited_at: Default::default(),
             events: Default::default(),
             spans: Default::default(),
             closed_at: Default::default(),
+            entered_at: Default::default(),
         }
     }
 }
@@ -193,7 +196,11 @@ impl SpanTraceData {
 
     fn enter_span(&mut self, parent: Option<&Id>, id: &Id) {
         self.with(parent, |s| {
-            s.spans.push((id.into_u64(), SpanTraceData::default()));
+            for (child_id, v) in s.spans.iter_mut() {
+                if *child_id == id.into_u64() {
+                    v.entered_at = Some(Utc::now().naive_local());
+                }
+            }
         });
     }
 

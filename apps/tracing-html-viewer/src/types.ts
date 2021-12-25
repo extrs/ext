@@ -10,8 +10,11 @@ export interface TraceEvent {
 }
 
 export interface SpanTraceData {
+    enteredAt: string | null
+    exitedAt: string | null
     closedAt: string | null
-    enteredAt: string
+    createdAt: string
+
     events: TraceEvent[]
 
     spans: [id: number, data: SpanTraceData][]
