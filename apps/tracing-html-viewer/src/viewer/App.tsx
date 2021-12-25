@@ -1,6 +1,6 @@
 import React from "react";
 import { SpanDecls, SpanTraceData } from "../types";
-import SpanView from "./SpanTraceView";
+import SpanTraceView from "./SpanTraceView";
 
 export interface AppProps {
   spanDecls: SpanDecls;
@@ -10,7 +10,7 @@ export interface AppProps {
 const App: React.FC<AppProps> = ({ spanDecls, root }) => {
   return (
     <div>
-      <SpanView spanDecls={spanDecls} data={root} />
+      <SpanTraceView spanDecls={spanDecls} data={root} />
     </div>
   );
 };

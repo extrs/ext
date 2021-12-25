@@ -1,9 +1,8 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import TreeView from "@mui/lab/TreeView";
-import React from "react";
+import React, { useState } from "react";
 import { SpanDecls, SpanTraceData } from "../types";
-import TreeItem from "@mui/lab/TreeItem";
+import Grid from "@mui/material/Grid";
 
 export interface SpanViewProps {
   spanDecls: SpanDecls;
@@ -11,39 +10,34 @@ export interface SpanViewProps {
   data: SpanTraceData;
 }
 
-const SpanView: React.FC<SpanViewProps> = ({ spanDecls, id, data }) => {
-  const renderTree = (id: number, data: SpanTraceData) => (
-    <TreeItem
-      key={id}
-      nodeId={id.toString()}
-      label={spanDecls[id]?.metadata.name ?? "<Unknown>"}
-    >
-      {data.spans.map(([id, data]) => renderTree(id, data))}
-    </TreeItem>
-  );
+const SpanTraceView: React.FC<SpanViewProps> = ({ spanDecls, id, data }) => {
+  const [expanded, setExpanded] = useState(true);
 
   return (
     <div>
-      {id && spanDecls[id] && <div>{spanDecls[id].metadata.name}</div>}
+      {id && <div>{spanDecls[id]?.metadata.name ?? `<Unknown>`}</div>}
 
       {data.enteredAt}
-      <div>
-        <TreeView
-          defaultCollapseIcon={<ExpandMoreIcon />}
-          defaultExpanded={["root"]}
-          defaultExpandIcon={<ChevronRightIcon />}
-          sx={{
-            height: 110,
-            flexGrow: 1,
-            maxWidth: 400,
-            overflowY: "auto",
-          }}
-        >
-          {renderTree(0, data)}
-        </TreeView>
-      </div>
+      {data.spans.length > 0 && (
+        <>
+          <Grid container direction="row">
+            <Grid item>
+              {!expanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
+            </Grid>
+            <Grid item>
+              {data.spans.map(([id, data]) => (
+                <SpanTraceView
+                  spanDecls={spanDecls}
+                  id={id}
+                  data={data}
+                ></SpanTraceView>
+              ))}
+            </Grid>
+          </Grid>
+        </>
+      )}
     </div>
   );
 };
 
-export default SpanView;
+export default SpanTraceView;
