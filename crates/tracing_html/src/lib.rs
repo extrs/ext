@@ -79,13 +79,13 @@ struct SpanTraceData {
 
     spans: Vec<(u64, SpanTraceData)>,
 
-    enter_at: NaiveDateTime,
+    entered_at: NaiveDateTime,
 }
 
 impl Default for SpanTraceData {
     fn default() -> Self {
         Self {
-            enter_at: Utc::now().naive_local(),
+            entered_at: Utc::now().naive_local(),
             exited_at: Default::default(),
             events: Default::default(),
             spans: Default::default(),
