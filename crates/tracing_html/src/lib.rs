@@ -1,4 +1,5 @@
 use anyhow::{Context as _, Error};
+use chrono::NaiveDateTime;
 use serde::Serialize;
 use std::{
     env,
@@ -20,7 +21,9 @@ struct HtmlLayer {
 }
 
 #[derive(Debug, Serialize)]
-struct Event {}
+struct Event {
+    time: NaiveDateTime,
+}
 
 impl Drop for HtmlLayer {
     fn drop(&mut self) {
