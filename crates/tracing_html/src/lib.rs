@@ -1,5 +1,5 @@
 use anyhow::{Context as _, Error};
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, Utc};
 use serde::Serialize;
 use std::{
     env,
@@ -17,17 +17,41 @@ use tracing_subscriber::{layer::Context, registry::LookupSpan, Layer};
 struct HtmlLayer {
     js_path: PathBuf,
     wr: BufWriter<File>,
-    events: Mutex<Vec<Event>>,
+    /// The root span
+    span: Mutex<SpanData>,
+}
+
+/// Events of a span.
+#[derive(Debug, Serialize)]
+struct SpanData {
+    time: NaiveDateTime,
+
+    #[serde(skip)]
+    is_closed: bool,
+
+    events: Vec<Event>,
+}
+
+impl Default for SpanData {
+    fn default() -> Self {
+        Self {
+            time: Utc::now().naive_local(),
+            is_closed: Default::default(),
+            events: Default::default(),
+        }
+    }
 }
 
 #[derive(Debug, Serialize)]
-struct Event {
-    time: NaiveDateTime,
+#[serde(tag = "type")]
+enum Event {
+    #[serde(rename = "span")]
+    Span(SpanData),
 }
 
 impl Drop for HtmlLayer {
     fn drop(&mut self) {
-        let data = serde_json::to_string(&self.events).unwrap();
+        let data = serde_json::to_string(&self.span).unwrap();
 
         write!(
             self.wr,
@@ -60,13 +84,13 @@ where
 
     fn on_follows_from(&self, span: &Id, follows: &Id, ctx: Context<'_, S>) {}
 
-    fn on_event(&self, _event: &tracing::Event<'_>, ctx: Context<'_, S>) {}
+    fn on_event(&self, event: &tracing::Event<'_>, ctx: Context<'_, S>) {}
 
-    fn on_enter(&self, _id: &Id, ctx: Context<'_, S>) {}
+    fn on_enter(&self, id: &Id, ctx: Context<'_, S>) {}
 
-    fn on_exit(&self, _id: &Id, ctx: Context<'_, S>) {}
+    fn on_exit(&self, id: &Id, ctx: Context<'_, S>) {}
 
-    fn on_close(&self, _id: Id, ctx: Context<'_, S>) {}
+    fn on_close(&self, id: Id, ctx: Context<'_, S>) {}
 
     fn on_id_change(&self, old: &Id, new: &Id, ctx: Context<'_, S>) {}
 }
@@ -111,6 +135,6 @@ where
     Ok(HtmlLayer {
         js_path,
         wr,
-        events: Default::default(),
+        span: Default::default(),
     })
 }
