@@ -28,6 +28,7 @@ const SpanTraceView: React.FC<SpanViewProps> = ({ spanDecls, id, data }) => {
             flexDirection: "row",
             alignItems: "center",
           }}
+          onClick={() => setExpanded(!expanded)}
         >
           {id && data.spans.length > 0 && (
             <>{!expanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}</>
@@ -41,46 +42,52 @@ const SpanTraceView: React.FC<SpanViewProps> = ({ spanDecls, id, data }) => {
         </div>
       )}
 
-      <div
-        style={{
-          gridColumn: !!id ? 2 : 1,
-          gridRow: !!id ? 2 : 1,
-        }}
-      >
-        {id && spanDecls[id] && Object.keys(spanDecls[id].attrs).length > 0 && (
-          <div>
-            <span>Attributes:</span>
+      {expanded && (
+        <>
+          <div
+            style={{
+              gridColumn: !!id ? 2 : 1,
+              gridRow: !!id ? 2 : 1,
+            }}
+          >
+            {id &&
+              spanDecls[id] &&
+              Object.keys(spanDecls[id].attrs).length > 0 && (
+                <div>
+                  <span>Attributes:</span>
+
+                  <div>
+                    {Object.entries(spanDecls[id].attrs).map(([key, value]) => (
+                      <div key={key}>
+                        <span>{key}:</span>
+                        <span>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
             <div>
-              {Object.entries(spanDecls[id].attrs).map(([key, value]) => (
-                <div key={key}>
-                  <span>{key}:</span>
-                  <span>{value}</span>
-                </div>
-              ))}
+              <p>
+                Started: <span>{data.enteredAt ?? data.createdAt}</span>
+              </p>
+              <p>Ended: {data.exitedAt ?? `<Unknown>`}</p>
             </div>
-          </div>
-        )}
 
-        <div>
-          <p>
-            Started: <span>{data.enteredAt ?? data.createdAt}</span>
-          </p>
-          <p>Ended: {data.exitedAt ?? `<Unknown>`}</p>
-        </div>
-
-        {data.spans.length > 0 && (
-          <div>
-            {data.spans.map(([id, data]) => (
-              <SpanTraceView
-                spanDecls={spanDecls}
-                id={id}
-                data={data}
-              ></SpanTraceView>
-            ))}
+            {data.spans.length > 0 && (
+              <div>
+                {data.spans.map(([id, data]) => (
+                  <SpanTraceView
+                    spanDecls={spanDecls}
+                    id={id}
+                    data={data}
+                  ></SpanTraceView>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 };
