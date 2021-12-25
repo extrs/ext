@@ -16,6 +16,8 @@ use tracing::{
 use tracing_subscriber::{layer::Context, registry::LookupSpan, Layer};
 
 struct HtmlLayer {
+    output_path: PathBuf,
+
     js_path: PathBuf,
     wr: BufWriter<File>,
     data: Mutex<TraceData>,
@@ -28,8 +30,10 @@ struct TraceData {
     span: SpanTraceData,
 }
 
-#[derive(Debug, Serialize)]
-struct SpanDecl {}
+#[derive(Debug, Default, Serialize)]
+struct SpanDecl {
+    attrs: HashMap<&'static str, String, ahash::RandomState>,
+}
 
 /// Events of a span.
 #[derive(Debug, Serialize)]
@@ -64,11 +68,12 @@ enum Event {
 
 impl Drop for HtmlLayer {
     fn drop(&mut self) {
-        let data = serde_json::to_string(&self.data).unwrap();
+        let data = serde_json::to_string(&self.data);
 
-        write!(
-            self.wr,
-            r#"
+        if let Ok(data) = data {
+            write!(
+                self.wr,
+                r#"
 <html>
     <head>
         <script id="trace-data" type="text/trace-data">
@@ -80,10 +85,11 @@ impl Drop for HtmlLayer {
         <script src="{js_path}"></script>
     </body>
 </html>"#,
-            js_path = self.js_path.display(),
-            data = data
-        )
-        .expect("failed to write tail");
+                js_path = self.js_path.display(),
+                data = data
+            )
+            .expect("failed to write event to output file");
+        }
     }
 }
 
@@ -92,12 +98,26 @@ impl SpanTraceData {
     where
         F: FnOnce(&mut SpanTraceData) -> Ret,
     {
+        // Recursive
+        fn find<'a>(from: &'a mut SpanTraceData, id: &Id) -> Option<&'a mut SpanTraceData> {
+            for (child_id, span) in &mut from.spans {
+                if span.is_closed {
+                    continue;
+                }
+
+                if id.into_u64() == *child_id {
+                    return Some(span);
+                }
+
+                if let Some(span) = find(span, id) {
+                    return Some(span);
+                }
+            }
+            None
+        }
+
         if let Some(parent) = parent {
-            if let Some((_, v)) = self
-                .spans
-                .iter_mut()
-                .find(|(id, v)| *id == parent.into_u64() && !v.is_closed)
-            {
+            if let Some(v) = find(self, parent) {
                 op(v)
             } else {
                 unreachable!("{:?} is not a child of {:?}", parent, self)
@@ -143,11 +163,15 @@ where
     S: Subscriber,
 {
     fn on_new_span(&self, attrs: &Attributes<'_>, id: &Id, ctx: Context<'_, S>) {
-        self.data
-            .lock()
-            .unwrap()
-            .span
-            .add_span(ctx.current_span().id(), attrs, id);
+        let mut w = self.data.lock().unwrap();
+
+        {
+            let mut v = w.span_decls.entry(id.into_u64()).or_default();
+
+            // TODO: Attributes
+            // TODO: Metadata
+        }
+        w.span.add_span(ctx.current_span().id(), attrs, id);
     }
 
     fn on_record(&self, span: &Id, values: &Record<'_>, ctx: Context<'_, S>) {
@@ -237,6 +261,7 @@ where
     let wr = BufWriter::new(file);
 
     Ok(HtmlLayer {
+        output_path: output,
         js_path,
         wr,
         data: Default::default(),
