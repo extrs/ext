@@ -2,6 +2,7 @@ use anyhow::{Context as _, Error};
 use chrono::{NaiveDateTime, Utc};
 use serde::Serialize;
 use std::{
+    collections::HashMap,
     env,
     fs::{self, File},
     io::{BufWriter, Write},
@@ -17,24 +18,33 @@ use tracing_subscriber::{layer::Context, registry::LookupSpan, Layer};
 struct HtmlLayer {
     js_path: PathBuf,
     wr: BufWriter<File>,
-    /// The root span
-    span: Mutex<SpanData>,
+    data: Mutex<TraceData>,
 }
+
+#[derive(Debug, Default, Serialize)]
+struct TraceData {
+    span_decls: HashMap<u64, SpanDecl, ahash::RandomState>,
+    /// The root span
+    span: SpanTraceData,
+}
+
+#[derive(Debug, Serialize)]
+struct SpanDecl {}
 
 /// Events of a span.
 #[derive(Debug, Serialize)]
-struct SpanData {
+struct SpanTraceData {
     #[serde(skip)]
     is_closed: bool,
 
     events: Vec<Event>,
 
-    spans: Vec<(u64, SpanData)>,
+    spans: Vec<(u64, SpanTraceData)>,
 
     time: NaiveDateTime,
 }
 
-impl Default for SpanData {
+impl Default for SpanTraceData {
     fn default() -> Self {
         Self {
             time: Utc::now().naive_local(),
@@ -49,12 +59,12 @@ impl Default for SpanData {
 #[serde(tag = "type")]
 enum Event {
     #[serde(rename = "span")]
-    Span(SpanData),
+    Span(SpanTraceData),
 }
 
 impl Drop for HtmlLayer {
     fn drop(&mut self) {
-        let data = serde_json::to_string(&self.span).unwrap();
+        let data = serde_json::to_string(&self.data).unwrap();
 
         write!(
             self.wr,
@@ -77,10 +87,10 @@ impl Drop for HtmlLayer {
     }
 }
 
-impl SpanData {
+impl SpanTraceData {
     fn with<F, Ret>(&mut self, parent: Option<&Id>, op: F) -> Ret
     where
-        F: FnOnce(&mut SpanData) -> Ret,
+        F: FnOnce(&mut SpanTraceData) -> Ret,
     {
         if let Some(parent) = parent {
             if let Some((_, v)) = self
@@ -98,7 +108,9 @@ impl SpanData {
     }
 
     fn add_span(&mut self, parent: Option<&Id>, attrs: &Attributes<'_>, id: &Id) {
-        self.with(parent, |s| {});
+        self.with(parent, |s| {
+            s.spans.push((id.into_u64(), SpanTraceData::default()));
+        });
     }
 
     fn add_record(&mut self, parent: Option<&Id>, span: &Id, values: &Record) {
@@ -131,51 +143,58 @@ where
     S: Subscriber,
 {
     fn on_new_span(&self, attrs: &Attributes<'_>, id: &Id, ctx: Context<'_, S>) {
-        self.span
+        self.data
             .lock()
             .unwrap()
+            .span
             .add_span(ctx.current_span().id(), attrs, id);
     }
 
     fn on_record(&self, span: &Id, values: &Record<'_>, ctx: Context<'_, S>) {
-        self.span
+        self.data
             .lock()
             .unwrap()
+            .span
             .add_record(ctx.current_span().id(), span, values);
     }
 
     fn on_event(&self, event: &tracing::Event<'_>, ctx: Context<'_, S>) {
-        self.span
+        self.data
             .lock()
             .unwrap()
+            .span
             .add_event(ctx.current_span().id(), event);
     }
 
     fn on_enter(&self, id: &Id, ctx: Context<'_, S>) {
-        self.span
+        self.data
             .lock()
             .unwrap()
+            .span
             .enter_span(ctx.current_span().id(), id);
     }
 
     fn on_exit(&self, id: &Id, ctx: Context<'_, S>) {
-        self.span
+        self.data
             .lock()
             .unwrap()
+            .span
             .exit_span(ctx.current_span().id(), id);
     }
 
     fn on_close(&self, id: Id, ctx: Context<'_, S>) {
-        self.span
+        self.data
             .lock()
             .unwrap()
+            .span
             .close_span(ctx.current_span().id(), id);
     }
 
     fn on_id_change(&self, old: &Id, new: &Id, ctx: Context<'_, S>) {
-        self.span
+        self.data
             .lock()
             .unwrap()
+            .span
             .change_id(ctx.current_span().id(), old, new);
     }
 }
@@ -220,6 +239,6 @@ where
     Ok(HtmlLayer {
         js_path,
         wr,
-        span: Default::default(),
+        data: Default::default(),
     })
 }
