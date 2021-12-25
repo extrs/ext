@@ -94,6 +94,7 @@ impl Default for SpanTraceData {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 struct Event {
     fields: Fields,
 
