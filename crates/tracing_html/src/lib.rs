@@ -24,12 +24,14 @@ struct HtmlLayer {
 /// Events of a span.
 #[derive(Debug, Serialize)]
 struct SpanData {
-    time: NaiveDateTime,
-
     #[serde(skip)]
     is_closed: bool,
 
     events: Vec<Event>,
+
+    spans: Vec<(u64, SpanData)>,
+
+    time: NaiveDateTime,
 }
 
 impl Default for SpanData {
@@ -38,6 +40,7 @@ impl Default for SpanData {
             time: Utc::now().naive_local(),
             is_closed: Default::default(),
             events: Default::default(),
+            spans: Default::default(),
         }
     }
 }
@@ -75,6 +78,25 @@ impl Drop for HtmlLayer {
 }
 
 impl SpanData {
+    fn with<F, Ret>(&mut self, parent: Option<&Id>, op: F) -> Ret
+    where
+        F: FnOnce(&mut SpanData) -> Ret,
+    {
+        if let Some(parent) = parent {
+            if let Some((_, parent)) = self
+                .spans
+                .iter_mut()
+                .find(|(id, _)| *id == parent.into_u64())
+            {
+                op(parent)
+            } else {
+                unreachable!("{:?} is not a child of {:?}", parent, self)
+            }
+        } else {
+            op(self)
+        }
+    }
+
     fn add_span(&mut self, parent: Option<&Id>, attrs: &Attributes<'_>, id: &Id) {}
 
     fn add_record(&mut self, parent: Option<&Id>, span: &Id, values: &Record) {}
