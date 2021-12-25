@@ -110,8 +110,10 @@ impl Drop for HtmlLayer {
             write!(
                 self.wr,
                 r#"
+<!DOCTYPE html>
 <html>
     <head>
+        <meta charset="utf-8">
         <script id="trace-data" type="text/trace-data">
         {data}
         </script>
