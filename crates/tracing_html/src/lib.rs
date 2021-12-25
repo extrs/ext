@@ -27,6 +27,29 @@ struct HtmlLayer {
     data: Mutex<TraceData>,
 }
 
+#[derive(Debug, Serialize)]
+struct Metadata {
+    level: String,
+    name: &'static str,
+    target: String,
+    module_path: Option<String>,
+    file: Option<String>,
+    line: Option<u32>,
+}
+
+impl From<&'_ tracing::Metadata<'_>> for Metadata {
+    fn from(md: &tracing::Metadata) -> Self {
+        Metadata {
+            level: md.level().to_string(),
+            name: md.name(),
+            target: md.target().to_string(),
+            module_path: md.module_path().map(|p| p.to_string()),
+            file: md.file().map(|p| p.to_string()),
+            line: md.line(),
+        }
+    }
+}
+
 #[derive(Debug, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct TraceData {
@@ -35,10 +58,12 @@ struct TraceData {
     root: SpanTraceData,
 }
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct SpanDecl {
     attrs: Fields,
+
+    metadata: Metadata,
 }
 
 /// Events of a span.
@@ -71,6 +96,8 @@ impl Default for SpanTraceData {
 #[derive(Debug, Serialize)]
 struct Event {
     fields: Fields,
+
+    metadata: Metadata,
 }
 
 impl Drop for HtmlLayer {
@@ -152,7 +179,10 @@ impl SpanTraceData {
                 fields.insert(f.name(), format!("{:?}", v));
             });
 
-            s.events.push(Event { fields });
+            s.events.push(Event {
+                fields,
+                metadata: event.metadata().into(),
+            });
         });
     }
 
@@ -201,12 +231,17 @@ where
         let mut w = self.data.lock().unwrap();
 
         {
-            let decl = w.span_decls.entry(id.into_u64()).or_default();
+            let decl = w
+                .span_decls
+                .entry(id.into_u64())
+                .or_insert_with(|| SpanDecl {
+                    attrs: Default::default(),
+                    metadata: attrs.metadata().into(),
+                });
 
             attrs.record(&mut |f: &Field, v: &dyn Debug| {
                 decl.attrs.insert(f.name(), format!("{:?}", v));
             });
-            // TODO: Metadata
         }
         w.root.add_span(ctx.current_span().id(), id);
     }
