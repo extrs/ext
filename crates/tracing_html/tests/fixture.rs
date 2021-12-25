@@ -1,4 +1,5 @@
 use anyhow::Error;
+use tracing::info;
 use tracing_html::html_layer;
 use tracing_subscriber::prelude::*;
 
@@ -66,10 +67,24 @@ fn instrument_nested() -> Result<(), Error> {
         tracing::warn!("Hello, world!");
     }
 
+    #[tracing::instrument]
+    fn deeply_nested(call: usize) {
+        if call == 0 {
+            tracing::info!("Zero");
+        }
+
+        info!("Called");
+        if call > 0 {
+            deeply_nested(call - 1);
+        }
+    }
+
     tracing::error!("Hello, world!");
     call(10);
     call(5);
     call(2);
+
+    deeply_nested(110);
 
     Ok(())
 }
