@@ -1,5 +1,6 @@
 import React from "react";
 import { SpanDecls, SpanTraceData } from "../types";
+import FilterView from "./FilterView";
 import SpanTraceView from "./SpanTraceView";
 
 export interface AppProps {
@@ -9,7 +10,17 @@ export interface AppProps {
 
 const App: React.FC<AppProps> = ({ spanDecls, root }) => {
   return (
-    <div style={{ overflowX: "auto", width: "calc(100vw - 56px)" }}>
+    <div
+      style={{
+        overflowX: "auto",
+        width: "calc(100vw - 56px)",
+        display: "flex",
+        flexDirection: "row",
+      }}
+    >
+      <div>
+        <FilterView />
+      </div>
       <SpanTraceView spanDecls={spanDecls} data={root} />
     </div>
   );
