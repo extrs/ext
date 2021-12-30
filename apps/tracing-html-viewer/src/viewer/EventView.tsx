@@ -27,6 +27,18 @@ function colorFor(level: string) {
 }
 
 const EventView: React.FC<EventViewProps> = ({ event }) => {
+  const levelTextStyle = {
+    color: "#000000",
+    fontWeight: "500",
+    fontSize: "24px",
+    marginBottom: "10px"
+  }
+  const bodyTextStyle = {
+    color: "#000000",
+    fontWeight: "500",
+    fontSize: "18px",
+    marginBottom: "10px"
+  }
   return (
     <div style={{ display: "inline-block" }}>
       <Accordion style={{ background: colorFor(event.metadata.level) }}>
@@ -39,12 +51,32 @@ const EventView: React.FC<EventViewProps> = ({ event }) => {
         </AccordionSummary>
         <AccordionDetails>
           <Typography>
-            <div>Level {event.metadata.level}</div>
-            <div>Name: {event.metadata.name}</div>
-            <div>Target: {event.metadata.target}</div>
-            <div>File: {event.metadata.file}</div>
-            <div>Line: {event.metadata.line}</div>
-            <div>Module path: {event.metadata.modulePath}</div>
+            <div style={levelTextStyle}>Level {event.metadata.level}</div>
+            <div>Name:{" "}
+              <span style={bodyTextStyle}>
+                {event.metadata.name}
+              </span>
+            </div>
+            <div>Target:{" "}
+              <span style={bodyTextStyle}>
+                {event.metadata.target}
+              </span>
+            </div>
+            <div>File:{" "}
+              <span style={bodyTextStyle}>
+                {event.metadata.file}
+              </span>
+            </div>
+            <div>Line:{" "}
+              <span style={bodyTextStyle}>
+                {event.metadata.line}
+              </span>
+            </div>
+            <div>Module path:{" "}
+              <span style={bodyTextStyle}>
+                {event.metadata.modulePath}
+              </span>
+            </div>
           </Typography>
         </AccordionDetails>
       </Accordion>
