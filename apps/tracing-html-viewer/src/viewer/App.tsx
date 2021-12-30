@@ -13,9 +13,10 @@ const App: React.FC<AppProps> = ({ spanDecls, root }) => {
     <div
       style={{
         overflowX: "auto",
-        width: "calc(100vw - 56px)",
+        width: "100%",
         display: "flex",
-        flexDirection: "row",
+        flexDirection: "column",
+        margin: "20px",
       }}
     >
       <div>

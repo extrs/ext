@@ -13,11 +13,17 @@ export interface SpanViewProps {
 const SpanTraceView: React.FC<SpanViewProps> = ({ spanDecls, id, data }) => {
   const [expanded, setExpanded] = useState(true);
 
+  const bodyTextStyle = {
+    color: "#00000066",
+    fontWeight: "normal",
+    fontSize: "24px"
+  }
+
   return (
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "75px 1fr",
+        maxWidth: "400px",
       }}
     >
       {id && (
@@ -69,10 +75,34 @@ const SpanTraceView: React.FC<SpanViewProps> = ({ spanDecls, id, data }) => {
               )}
 
             <div>
-              <p>
-                Started: <span>{data.enteredAt ?? data.createdAt}</span>
+              <p
+                style={{
+                  fontWeight: "500",
+                }}
+              >
+                Started:
+                <br />
+                <span style={bodyTextStyle}>
+                  {
+                    data.enteredAt ??
+                    new Date(data.createdAt).getFullYear() + "-" +
+                    new Date(data.createdAt).getMonth() + "-" +
+                    new Date(data.createdAt).getDate() + " " +
+                    new Date(data.createdAt).getHours() + ":" +
+                    new Date(data.createdAt).getMinutes() + " "
+                  }
+                </span>
               </p>
-              <p>Ended: {data.exitedAt ?? `<Unknown>`}</p>
+              <p
+                style={{
+                  fontWeight: "500",
+                }}
+              >Ended:
+                <br />
+                <span style={bodyTextStyle}>
+                  {data.exitedAt ?? `<Unknown>`}
+                </span>
+              </p>
             </div>
 
             {data.events.length > 0 && (
