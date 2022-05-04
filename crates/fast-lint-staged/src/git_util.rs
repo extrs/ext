@@ -1,8 +1,13 @@
-use std::process::Command;
+use std::{
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 use anyhow::{bail, Context, Result};
 
-pub fn exec_git<F>(config: F) -> Result<Vec<String>>
+use crate::util::task;
+
+pub fn exec_git<F>(config: F) -> Result<String>
 where
     F: FnOnce(&mut Command),
 {
@@ -26,19 +31,47 @@ where
 
         let stdout = String::from_utf8(output.stdout).context("git returned non-utf8 string")?;
 
-        Ok(stdout
-            .split('\n')
-            .filter(|s| s.is_empty())
-            .map(String::from)
-            .collect())
+        Ok(stdout)
     })
     .context("failed to execute git command")
 }
 
-/// Type annotation for closure
-pub fn task<F, T>(op: F) -> Result<T>
-where
-    F: FnOnce() -> Result<T>,
-{
-    op()
+pub fn get_staged_files(cwd: Option<&Path>) -> Result<Vec<PathBuf>> {
+    task(|| {
+        let lines = exec_git(|cmd| {
+            cmd.arg("diff")
+                .arg("--staged")
+                .arg("--diff-filter=ACMR")
+                .arg("--name-only")
+                .arg("-z");
+        })
+        .context("failed to execute git diff")?;
+
+        if lines.is_empty() {
+            return Ok(Default::default());
+        }
+
+        parse_git_z_output(&lines)
+            .into_iter()
+            .map(PathBuf::from)
+            .map(|file| file.canonicalize().context("failed to normalize path"))
+            .collect::<Result<_>>()
+    })
+    .context("failed to get staged files")
+}
+
+/// Return array of strings split from the output of `git <something> -z`. With
+/// `-z`, git prints `fileA\u0000fileB\u0000fileC\u0000` so we need to remove
+/// the last occurrence of `\u0000` before splitting
+fn parse_git_z_output(input: &str) -> Vec<String> {
+    if input.is_empty() {
+        return vec![];
+    }
+
+    input
+        .strip_suffix("\u{0000}")
+        .unwrap()
+        .split("\u{0000}")
+        .map(String::from)
+        .collect()
 }
