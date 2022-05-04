@@ -9,6 +9,8 @@ where
     task(|| {
         let mut cmd = Command::new("git");
 
+        cmd.arg("-c").arg("submodule.recurse=false");
+
         config(&mut cmd);
 
         let output = cmd.output().context("failed to invoke git")?;
