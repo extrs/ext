@@ -1,0 +1,20 @@
+[package]
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "Implementation of subscriber of tracing which uses web stack to show nested log in a nice way"
+edition = "2021"
+include = ["Cargo.toml", "src/**/*.rs"]
+license = "Apache-2.0"
+name = "tracing_html"
+repository = "https://github.com/kdy1/ext.git"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ahash = "0.7"
+anyhow = "1"
+chrono = {version = "0.4", features = ["serde"]}
+serde = {version = "1", features = ["derive"]}
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = "0.3"
