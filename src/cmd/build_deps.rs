@@ -15,6 +15,7 @@ impl BuildDepsCommand {
             .exec()
             .context("cargo metadata failed")?;
 
+        dbg!(&metadata);
         Ok(())
     }
 }

@@ -1,3 +1,4 @@
+use anyhow::Result;
 use clap::Parser;
 
 use self::cmd::Command;
@@ -10,6 +11,12 @@ struct CmdArgs {
     cmd: Command,
 }
 
-fn main() {
-    println!("Hello, world!");
+fn main() -> Result<()> {
+    let args = CmdArgs::parse();
+
+    match args.cmd {
+        Command::BuildDeps(cmd) => cmd.run()?,
+    }
+
+    Ok(())
 }
