@@ -1,7 +1,11 @@
-use std::{collections::HashSet, env::current_dir};
+use std::{
+    collections::{HashMap, HashSet},
+    env::current_dir,
+    sync::Arc,
+};
 
-use anyhow::{Context, Result};
-use cargo_metadata::{MetadataCommand, Package, PackageId, Version};
+use anyhow::{anyhow, bail, Context, Result};
+use cargo_metadata::{Dependency, MetadataCommand, Package, PackageId, Version};
 use clap::Args;
 
 use crate::util::cargo::cargo_workspace_members;
@@ -16,18 +20,28 @@ pub struct BuildDepsCommand {}
 impl BuildDepsCommand {
     pub fn run(self) -> Result<()> {
         let dir = current_dir().context("failed to get current directory")?;
-        let workspace_members = cargo_workspace_members(&dir)?;
-
-        let mut finder = DepsFinder {
-            workspace_members,
-            deps: Default::default(),
-        };
-
         let metadata = MetadataCommand::new()
             .exec()
             .context("cargo metadata failed")?;
 
-        for pkg in &metadata.packages {
+        let mut finder = DepsFinder {
+            workspace_members: metadata.workspace_members,
+            ..Default::default()
+        };
+
+        let mut all_pkgs = vec![];
+
+        for pkg in metadata.packages.into_iter().map(Arc::new) {
+            all_pkgs.push(pkg.clone());
+
+            finder
+                .pkg_by_name
+                .entry(pkg.name.clone())
+                .or_default()
+                .push(pkg.clone());
+        }
+
+        for pkg in &all_pkgs {
             finder.check(pkg)?;
         }
 
@@ -37,14 +51,45 @@ impl BuildDepsCommand {
     }
 }
 
-#[derive(Debug)]
+/// Build config for a package.
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+struct DepPkgConfig {
+    features: Vec<String>,
+}
+
+impl DepPkgConfig {
+    fn merge(&mut self, other: Self) {
+        self.features.extend_from_slice(&other.features);
+        self.features.sort();
+        self.features.dedup();
+    }
+}
+
+#[derive(Debug, Default)]
 struct DepsFinder {
     workspace_members: Vec<PackageId>,
+    pkg_by_name: HashMap<String, Vec<Arc<Package>>>,
 
-    deps: Vec<(String, Version)>,
+    deps: HashMap<PackageId, DepPkgConfig>,
 }
 
 impl DepsFinder {
+    fn pkg_from_dep(&self, dep: &Dependency) -> Result<Arc<Package>> {
+        let pkgs = self
+            .pkg_by_name
+            .get(&dep.name)
+            .ok_or_else(|| anyhow!("failed to find package {}", dep.name))?;
+
+        for pkg in pkgs.iter() {
+            if dep.req.matches(&pkg.version) {
+                return Ok(pkg.clone());
+            }
+        }
+
+        bail!("failed to find matching version of {}", dep.name)
+    }
+
     fn check(&mut self, pkg: &Package) -> Result<()> {
         if self.workspace_members.contains(&pkg.id) {
             self.include_pkg(pkg)?;
@@ -54,8 +99,15 @@ impl DepsFinder {
     }
 
     fn include_pkg(&mut self, pkg: &Package) -> Result<()> {
-        for dep in &pkg.dependencies {}
+        for dep in &pkg.dependencies {
+            let pkg = self.pkg_from_dep(dep)?;
+
+            if let Some(config) = self.check_dep(dep)? {}
+        }
 
         Ok(())
     }
+
+    /// Returns [Some] if `dep` should be built.
+    fn check_dep(&mut self, dep: &Dependency) -> Result<Option<DepPkgConfig>> {}
 }
