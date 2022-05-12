@@ -127,7 +127,9 @@ impl DepsFinder {
             if let Some(config) = self.check_dep(pkg.clone(), dep)? {
                 self.check(&pkg)?;
 
-                self.deps.entry(pkg.id.clone()).or_default().merge(config);
+                if !self.workspace_members.contains(&pkg.id) {
+                    self.deps.entry(pkg.id.clone()).or_default().merge(config);
+                }
             }
         }
 
