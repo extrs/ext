@@ -4,6 +4,7 @@ use clap::Parser;
 use self::cmd::Command;
 
 mod cmd;
+mod util;
 
 #[derive(Debug, Parser)]
 struct CmdArgs {
