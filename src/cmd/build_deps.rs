@@ -60,7 +60,7 @@ impl BuildDepsCommand {
 
 /// Build config for a package.
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct DepPkgConfig {
     features: Vec<String>,
 
@@ -124,7 +124,11 @@ impl DepsFinder {
                 None => continue,
             };
 
-            if let Some(config) = self.check_dep(pkg.clone(), dep)? {}
+            if let Some(config) = self.check_dep(pkg.clone(), dep)? {
+                self.check(&pkg)?;
+
+                self.deps.entry(pkg.id.clone()).or_default().merge(config);
+            }
         }
 
         Ok(())
