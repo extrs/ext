@@ -6,9 +6,10 @@ use std::{
 
 use anyhow::{anyhow, bail, Context, Result};
 use cargo_metadata::{Dependency, MetadataCommand, Package, PackageId, Version};
+use cargo_platform::Cfg;
 use clap::Args;
 
-use crate::util::cargo::cargo_workspace_members;
+use crate::util::cargo::query_rustc_cfg;
 
 /// Used to build only dependencies, excluding workspace members.
 ///
@@ -24,9 +25,15 @@ impl BuildDepsCommand {
             .exec()
             .context("cargo metadata failed")?;
 
+        let (cur_target, cur_cfgs) = query_rustc_cfg()?;
+
         let mut finder = DepsFinder {
             workspace_members: metadata.workspace_members,
-            ..Default::default()
+            cur_target,
+            cur_cfgs,
+            pkg_by_name: Default::default(),
+            done: Default::default(),
+            deps: Default::default(),
         };
 
         let mut all_pkgs = vec![];
@@ -56,6 +63,8 @@ impl BuildDepsCommand {
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct DepPkgConfig {
     features: Vec<String>,
+
+    use_default_feature: bool,
 }
 
 impl DepPkgConfig {
@@ -63,13 +72,20 @@ impl DepPkgConfig {
         self.features.extend_from_slice(&other.features);
         self.features.sort();
         self.features.dedup();
+
+        self.use_default_feature |= other.use_default_feature;
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 struct DepsFinder {
+    cur_target: String,
+    cur_cfgs: Vec<Cfg>,
+
     workspace_members: Vec<PackageId>,
     pkg_by_name: HashMap<String, Vec<Arc<Package>>>,
+
+    done: HashSet<PackageId>,
 
     deps: HashMap<PackageId, DepPkgConfig>,
 }
@@ -91,6 +107,10 @@ impl DepsFinder {
     }
 
     fn check(&mut self, pkg: &Package) -> Result<()> {
+        if !self.done.insert(pkg.id.clone()) {
+            return Ok(());
+        }
+
         if self.workspace_members.contains(&pkg.id) {
             self.include_pkg(pkg)?;
         }
@@ -102,12 +122,33 @@ impl DepsFinder {
         for dep in &pkg.dependencies {
             let pkg = self.pkg_from_dep(dep)?;
 
-            if let Some(config) = self.check_dep(dep)? {}
+            if let Some(config) = self.check_dep(pkg.clone(), dep)? {}
         }
 
         Ok(())
     }
 
     /// Returns [Some] if `dep` should be built.
-    fn check_dep(&mut self, dep: &Dependency) -> Result<Option<DepPkgConfig>> {}
+    fn check_dep(&mut self, pkg: Arc<Package>, dep: &Dependency) -> Result<Option<DepPkgConfig>> {
+        // TODO: Optional
+        // TODO: build/dev deps
+
+        // Check if we are going to include this package.
+        match &dep.target {
+            Some(target) => {
+                if !target.matches(&self.cur_target, &self.cur_cfgs) {
+                    // We are not interested in this package.
+                    return Ok(None);
+                }
+            }
+            None => {
+                // This is simple, unconditional dependency.
+            }
+        }
+
+        Ok(Some(DepPkgConfig {
+            features: dep.features.clone(),
+            use_default_feature: dep.uses_default_features,
+        }))
+    }
 }
