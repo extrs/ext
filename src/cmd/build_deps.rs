@@ -91,19 +91,17 @@ struct DepsFinder {
 }
 
 impl DepsFinder {
-    fn pkg_from_dep(&self, dep: &Dependency) -> Result<Arc<Package>> {
-        let pkgs = self
-            .pkg_by_name
-            .get(&dep.name)
-            .ok_or_else(|| anyhow!("failed to find package {}", dep.name))?;
+    /// If cargo is not going to build a package it's not in the list.
+    fn pkg_from_dep(&self, dep: &Dependency) -> Option<Arc<Package>> {
+        let pkgs = self.pkg_by_name.get(&dep.name)?;
 
         for pkg in pkgs.iter() {
             if dep.req.matches(&pkg.version) {
-                return Ok(pkg.clone());
+                return Some(pkg.clone());
             }
         }
 
-        bail!("failed to find matching version of {}", dep.name)
+        None
     }
 
     fn check(&mut self, pkg: &Package) -> Result<()> {
@@ -120,7 +118,11 @@ impl DepsFinder {
 
     fn include_pkg(&mut self, pkg: &Package) -> Result<()> {
         for dep in &pkg.dependencies {
-            let pkg = self.pkg_from_dep(dep)?;
+            let pkg = self.pkg_from_dep(dep);
+            let pkg = match pkg {
+                Some(v) => v,
+                None => continue,
+            };
 
             if let Some(config) = self.check_dep(pkg.clone(), dep)? {}
         }
