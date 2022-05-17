@@ -13,4 +13,6 @@ name = "timeout"
 path = "src/main.rs"
 
 [dependencies]
+anyhow = "1.0.57"
+clap = {version = "3.1.18", features = ["derive"]}
 ext-common = {version = "0.1.0", path = "../ext-common"}
