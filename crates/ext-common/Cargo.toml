@@ -9,3 +9,6 @@ repository = "https://github.com/extrs/ext"
 version = "0.1.0"
 
 [dependencies]
+anyhow = "1.0.57"
+tracing = "0.1.34"
+tracing-subscriber = {version = "0.3.11", features = ["fmt"]}
