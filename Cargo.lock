@@ -3,9 +3,19 @@
 version = 3
 
 [[package]]
-name = "retry"
+name = "ext-common"
 version = "0.1.0"
 
 [[package]]
-name = "timeout"
+name = "ext-retry"
 version = "0.1.0"
+dependencies = [
+ "ext-common",
+]
+
+[[package]]
+name = "ext-timeout"
+version = "0.1.0"
+dependencies = [
+ "ext-common",
+]

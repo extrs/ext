@@ -1,8 +1,14 @@
 [package]
-name = "timeout"
-version = "0.1.0"
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "timeout tool"
 edition = "2021"
+include = ["Cargo.toml", "src/**/*.rs"]
+license = "Apache-2.0"
+name = "ext-timeout"
+repository = "https://github.com/extrs/ext"
+version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+ext-common = {version = "0.1.0", path = "../ext-common"}
