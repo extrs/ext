@@ -1,4 +1,6 @@
-use anyhow::Result;
+use std::time::Duration;
+
+use anyhow::{anyhow, Context, Result};
 use clap::Parser;
 use ext_common::init_logger;
 
@@ -20,6 +22,14 @@ fn main() -> Result<()> {
     let _logger = init_logger();
 
     let args = AppArgs::parse();
+
+    let timeout = args
+        .timeout
+        .parse::<u64>()
+        .map(Duration::from_millis)
+        .or_else(|_| {
+            humantime::parse_duration(&args.timeout).context("failed to parse timeout duration")
+        })?;
 
     println!("Hello, world!");
 
