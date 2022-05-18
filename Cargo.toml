@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "crates/extrs",
   "crates/ext-retry",
   "crates/ext-timeout",
 ]
