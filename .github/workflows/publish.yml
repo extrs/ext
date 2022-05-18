@@ -66,6 +66,12 @@ jobs:
         shell: bash
         run: |
           cargo build --release --target ${{ matrix.settings.target }}
+
+      - name: List files
+        shell: bash
+        run: |
+          ls -alHR target/
+
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
