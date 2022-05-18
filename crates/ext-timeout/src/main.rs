@@ -10,8 +10,10 @@ use clap::Parser;
 use ext_common::init_logger;
 
 /// Run command with a timeout.
+///
+/// Usage: `ext-timeout --timeout 5s -- cargo build --release`
 #[derive(Debug, Parser)]
-#[clap(name = "timeout")]
+#[clap(name = "ext-timeout")]
 pub struct AppArgs {
     /// The number of milliseconds to wait before terminating, or text like `1s`
     /// or `1m`.
