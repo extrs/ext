@@ -6,7 +6,7 @@ use tokio::process::Command;
 
 /// Run command with a timeout.
 ///
-/// Usage: `ext-timeout --timeout 5s -- cargo build --release`
+/// Usage: `extrs timeout --timeout 1s -- cargo build --release`
 #[derive(Debug, Parser)]
 #[clap(name = "timeout")]
 pub struct TimeoutCommand {
