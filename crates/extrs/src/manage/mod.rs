@@ -7,6 +7,7 @@ mod completion;
 
 /// Manage extrs itself.
 #[derive(Debug, Subcommand)]
+#[clap(name = "x")]
 pub enum ManageCommand {
     Completion(CompletionCommand),
 }
