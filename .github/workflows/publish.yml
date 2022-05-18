@@ -10,9 +10,12 @@ on:
     branches:
       - ci
       - main
+    tags:
+      - v*
 
 jobs:
   build:
+    if: ${{ startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/ci' }}
     strategy:
       fail-fast: false
       matrix:
