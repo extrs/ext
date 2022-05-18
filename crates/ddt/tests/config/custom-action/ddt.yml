@@ -7,9 +7,13 @@ actions:
         run: |
           yarn dev
 
+events:
+  - id: rust-file-change
+    files: "**/*.rs"
+
 rules:
   - name: "Foo"
-    if: ${{ matrix.foo == 1 }}
+    if: ${{ events.rust-file-change }}
     steps:
       - name: "Remove previous files"
         run: rm -rf .next
