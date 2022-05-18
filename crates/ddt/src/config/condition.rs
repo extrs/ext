@@ -1,5 +1,7 @@
 use serde::Deserialize;
 
+use crate::expr::Expr;
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(untagged, rename_all = "camelCase")]
 pub enum Condition {
@@ -10,17 +12,6 @@ pub enum Condition {
     ///   - cond a
     ///   - cond b
     /// ```
-    Multi(Vec<Condition>),
-
-    /// ```yml  
-    /// if:
-    ///     - cond a && cond b
-    /// ```
-    And(Box<Condition>, Box<Condition>),
-
-    /// ```yml  
-    /// if:
-    ///     - cond a || cond b
-    /// ```
-    Or(Box<Condition>, Box<Condition>),
+    Multi(Vec<Expr>),
+    Single(Expr),
 }
