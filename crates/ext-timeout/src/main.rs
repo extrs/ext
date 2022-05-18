@@ -1,4 +1,9 @@
-use std::time::Duration;
+use std::{
+    process::{self, Command},
+    sync::mpsc,
+    thread,
+    time::Duration,
+};
 
 use anyhow::{anyhow, Context, Result};
 use clap::Parser;
@@ -31,7 +36,34 @@ fn main() -> Result<()> {
             humantime::parse_duration(&args.timeout).context("failed to parse timeout duration")
         })?;
 
-    println!("Hello, world!");
+    let (sender, receiver) = mpsc::channel();
 
-    Ok(())
+    let timer_sender = sender.clone();
+
+    let _t = thread::spawn(move || {
+        let res = (|| {
+            let mut cmd = Command::new(&args.command[0]);
+            for (i, arg) in args.command.iter().enumerate() {
+                if i == 0 {
+                    continue;
+                }
+                cmd.arg(arg);
+            }
+
+            let status = cmd.status().context("failed to run command")?;
+
+            Ok(status)
+        })();
+
+        let _ = sender.send(res);
+    });
+
+    let _timer = thread::spawn(move || {
+        thread::sleep(timeout);
+        let _ = timer_sender.send(Err(anyhow!("timed out")));
+    });
+
+    let status = receiver.recv().unwrap()?;
+
+    process::exit(status.code().unwrap_or(1));
 }
