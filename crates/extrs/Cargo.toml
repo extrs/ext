@@ -1,16 +1,20 @@
 [package]
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
-description = "timeout tool"
+description = "Coreutils for 2022"
 edition = "2021"
 include = ["Cargo.toml", "src/**/*.rs"]
 license = "Apache-2.0"
-name = "ext-timeout"
+name = "extrs"
 repository = "https://github.com/extrs/ext"
-version = "0.1.1"
+version = "0.1.0"
+
+[[bin]]
+name = "extrs"
+path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0.57"
 clap = {version = "3.1.18", features = ["derive"]}
 ext-common = {version = "0.1.1", path = "../ext-common"}
-humantime = "2.1.0"
+ext-timeout = {version = "0.1.1", path = "../ext-timeout"}
 tokio = {version = "1.18.2", features = ["rt", "process", "macros", "rt-multi-thread", "sync", "time"]}
