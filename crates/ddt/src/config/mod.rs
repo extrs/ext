@@ -8,18 +8,24 @@ pub mod condition;
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ConfigFile {
-    pub(crate) rules: Vec<Rule>,
+    pub rules: Vec<Rule>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Rule {
-    pub(crate) actions: Vec<RuleAction>,
+    #[serde(default)]
+    pub name: Option<String>,
+
+    #[serde(rename = "if")]
+    pub if_: Condition,
+
+    pub actions: Vec<RuleAction>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RuleAction {
-    #[serde(rename = "if")]
-    pub(crate) if_: Condition,
+    #[serde(default)]
+    pub name: Option<String>,
 }
