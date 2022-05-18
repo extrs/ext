@@ -15,6 +15,9 @@ pub struct ConfigFile {
 #[serde(rename_all = "camelCase")]
 pub struct Rule {
     #[serde(default)]
+    pub id: Option<String>,
+
+    #[serde(default)]
     pub name: Option<String>,
 
     #[serde(rename = "if")]
@@ -26,6 +29,9 @@ pub struct Rule {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RuleStep {
+    #[serde(default)]
+    pub id: Option<String>,
+
     #[serde(default)]
     pub name: Option<String>,
 }
