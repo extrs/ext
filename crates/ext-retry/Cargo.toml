@@ -8,9 +8,5 @@ name = "ext-retry"
 repository = "https://github.com/extrs/ext"
 version = "0.1.0"
 
-[[bin]]
-name = "retry"
-path = "src/main.rs"
-
 [dependencies]
 ext-common = {version = "0.1.0", path = "../ext-common"}
