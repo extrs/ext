@@ -53,16 +53,11 @@ jobs:
         with:
           profile: minimal
           target: ${{ matrix.settings.target }}
-      - name: Cache cargo registry
-        uses: actions/cache@v3
+
+      - uses: Swatinem/rust-cache@v1
         with:
-          path: ~/.cargo/registry
-          key: ${{ matrix.settings.target }}-publish
-      - name: Cache cargo index
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo/git
-          key: ${{ matrix.settings.target }}-publish
+          cache-on-failure: true
+          sharedKey: publish-${{ matrix.settings.target }}
 
       - name: Build
         shell: bash
