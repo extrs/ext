@@ -1,6 +1,6 @@
 rules:
   - name: "Foo"
-    if: { { matrix.foo == 1 } }
+    if: ${{ matrix.foo == 1 }}
     steps:
       - name: "Remove previous files"
         run: rm -rf .next
