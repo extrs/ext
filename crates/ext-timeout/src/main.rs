@@ -1,13 +1,9 @@
-use std::{
-    process::{self, Command},
-    sync::mpsc,
-    thread,
-    time::Duration,
-};
+use std::time::Duration;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use clap::Parser;
 use ext_common::init_logger;
+use tokio::process::Command;
 
 /// Run command with a timeout.
 ///
@@ -25,7 +21,8 @@ pub struct AppArgs {
     pub command: Vec<String>,
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let _logger = init_logger();
 
     let args = AppArgs::parse();
@@ -38,31 +35,31 @@ fn main() -> Result<()> {
             humantime::parse_duration(&args.timeout).context("failed to parse timeout duration")
         })?;
 
-    let (sender, receiver) = mpsc::channel();
+    let mut cmd = Command::new(&args.command[0]);
+    cmd.kill_on_drop(true);
 
-    let timer_sender = sender.clone();
+    for arg in args.command.iter().skip(1) {
+        cmd.arg(arg);
+    }
 
-    let _t = thread::spawn(move || {
-        let res = (|| {
-            let mut cmd = Command::new(&args.command[0]);
-            for arg in args.command.iter().skip(1) {
-                cmd.arg(arg);
+    let status = tokio::time::timeout(timeout, async move {
+        cmd.status().await.context("failed to run command")
+    })
+    .await;
+
+    match status {
+        Ok(status) => match status {
+            Ok(status) => std::process::exit(status.code().unwrap_or(1)),
+            Err(err) => {
+                // Child process failed to start
+                eprintln!("{}", err);
+                std::process::exit(2);
             }
-
-            let status = cmd.status().context("failed to run command")?;
-
-            Ok(status)
-        })();
-
-        let _ = sender.send(res);
-    });
-
-    let _timer = thread::spawn(move || {
-        thread::sleep(timeout);
-        let _ = timer_sender.send(Err(anyhow!("timed out")));
-    });
-
-    let status = receiver.recv().unwrap()?;
-
-    process::exit(status.code().unwrap_or(1));
+        },
+        Err(err) => {
+            // Timed out
+            eprintln!("{}", err);
+            std::process::exit(1);
+        }
+    }
 }
