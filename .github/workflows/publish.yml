@@ -98,9 +98,19 @@ jobs:
         run: ls -R artifacts
         shell: bash
 
+      - name: Compress
+        shell: bash
+        run: |
+          mkdir -p dist
+          ls artifacts | xargs -L 1 -I {} tar -czvf dist/{}.tar.gz artifacts/{}
+
+      - name: List compressed files
+        run: ls -R dist
+        shell: bash
+
       - name: Create github release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            artifacts/
+            dist/*
