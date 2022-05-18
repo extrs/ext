@@ -4,6 +4,7 @@ use ext_common::init_logger;
 use ext_timeout::TimeoutCommand;
 
 #[derive(Debug, Parser)]
+#[clap(name = "extrs")]
 struct AppArgs {
     #[clap(subcommand)]
     cmd: ExtCommand,

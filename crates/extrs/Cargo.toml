@@ -8,7 +8,9 @@ name = "extrs"
 repository = "https://github.com/extrs/ext"
 version = "0.1.0"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "extrs"
+path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0.57"
