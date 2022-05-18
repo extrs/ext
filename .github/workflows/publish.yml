@@ -19,31 +19,34 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Currently we only provide prebuilt binaries for some platforms.
+        #
+        # We should support (at least) m1 mac + all platforms used by github actions.
         settings:
           - host: macos-latest
             target: x86_64-apple-darwin
           - host: windows-latest
             target: x86_64-pc-windows-msvc
-          - host: windows-latest
-            target: i686-pc-windows-msvc
+          # - host: windows-latest
+          #   target: i686-pc-windows-msvc
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-          - host: ubuntu-latest
-            target: x86_64-unknown-linux-musl
+          # - host: ubuntu-latest
+          #   target: x86_64-unknown-linux-musl
           - host: macos-latest
             target: aarch64-apple-darwin
-          - host: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-          - host: ubuntu-18.04
-            target: armv7-unknown-linux-gnueabihf
-          - host: ubuntu-latest
-            target: aarch64-linux-android
-          - host: ubuntu-latest
-            target: armv7-linux-androideabi
-          - host: ubuntu-latest
-            target: aarch64-unknown-linux-musl
-          - host: windows-latest
-            target: aarch64-pc-windows-msvc
+          # - host: ubuntu-latest
+          #   target: aarch64-unknown-linux-gnu
+          # - host: ubuntu-18.04
+          #   target: armv7-unknown-linux-gnueabihf
+          # - host: ubuntu-latest
+          #   target: aarch64-linux-android
+          # - host: ubuntu-latest
+          #   target: armv7-linux-androideabi
+          # - host: ubuntu-latest
+          #   target: aarch64-unknown-linux-musl
+          # - host: windows-latest
+          #   target: aarch64-pc-windows-msvc
     name: Build - ${{ matrix.settings.target }}
     runs-on: ${{ matrix.settings.host }}
     steps:
