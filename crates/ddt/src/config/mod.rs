@@ -21,6 +21,9 @@ pub struct Action {
     pub id: String,
 
     #[serde(default)]
+    pub stdin: bool,
+
+    #[serde(default)]
     pub name: Option<String>,
 
     pub steps: Vec<RuleStep>,

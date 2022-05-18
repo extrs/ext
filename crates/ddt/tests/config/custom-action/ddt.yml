@@ -1,5 +1,6 @@
 actions:
   - id: web-app
+    stdin: false
     name: "Next.js dev server"
     steps:
       - name: "Run"
