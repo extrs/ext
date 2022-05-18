@@ -78,6 +78,7 @@ jobs:
           name: binaries-${{ matrix.settings.target }}
           path: |
             target/${{ matrix.settings.target }}/release/ext-timeout
+            target/${{ matrix.settings.target }}/release/ext-timeout.exe
           if-no-files-found: error
 
   publish:
