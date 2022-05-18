@@ -1,0 +1,15 @@
+[package]
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "Coreutils for 2022"
+edition = "2021"
+include = ["Cargo.toml", "src/**/*.rs"]
+license = "Apache-2.0"
+name = "ddt"
+repository = "https://github.com/extrs/ext"
+version = "0.1.0"
+
+[[bin]]
+name = "ddt"
+path = "src/main.rs"
+
+[dependencies]
