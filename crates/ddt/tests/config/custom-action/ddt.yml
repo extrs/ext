@@ -9,6 +9,7 @@ actions:
 
 events:
   - id: rust-file-change
+    listOnly: true
     files: "**/*.rs"
 
 rules:
