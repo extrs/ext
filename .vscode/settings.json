@@ -2,5 +2,8 @@
     "[rust]": {
         "editor.formatOnSave": true
     },
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "cSpell.words": [
+        "extrs"
+    ]
 }

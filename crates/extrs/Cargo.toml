@@ -15,6 +15,7 @@ path = "src/main.rs"
 [dependencies]
 anyhow = "1.0.57"
 clap = {version = "3.1.18", features = ["derive"]}
+clap_complete = "3.1.4"
 ext-common = {version = "0.1.1", path = "../ext-common"}
 ext-timeout = {version = "0.1.1", path = "../ext-timeout"}
 tokio = {version = "1.18.2", features = ["rt", "process", "macros", "rt-multi-thread", "sync", "time"]}
