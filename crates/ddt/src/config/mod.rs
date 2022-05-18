@@ -8,7 +8,22 @@ pub mod condition;
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ConfigFile {
+    #[serde(default)]
+    pub actions: Vec<Action>,
+
+    #[serde(default)]
     pub rules: Vec<Rule>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Action {
+    pub id: String,
+
+    #[serde(default)]
+    pub name: Option<String>,
+
+    pub steps: Vec<RuleStep>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
