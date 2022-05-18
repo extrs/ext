@@ -38,8 +38,9 @@ pub struct Rule {
     #[serde(default)]
     pub name: Option<String>,
 
-    #[serde(rename = "if")]
-    pub if_: Condition,
+    /// If not specified, the rule will be always applied.
+    #[serde(rename = "if", default)]
+    pub if_: Option<Condition>,
 
     pub steps: Vec<RuleStep>,
 }
