@@ -20,12 +20,12 @@ pub struct Rule {
     #[serde(rename = "if")]
     pub if_: Condition,
 
-    pub actions: Vec<RuleAction>,
+    pub steps: Vec<RuleStep>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct RuleAction {
+pub struct RuleStep {
     #[serde(default)]
     pub name: Option<String>,
 }
