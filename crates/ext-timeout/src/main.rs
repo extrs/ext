@@ -58,7 +58,7 @@ async fn main() -> Result<()> {
         },
         Err(err) => {
             // Timed out
-            eprintln!("{}", err);
+            eprintln!("Timeout");
             std::process::exit(1);
         }
     }
