@@ -7,15 +7,15 @@ mod completion;
 
 /// Manage extrs itself.
 #[derive(Debug, Subcommand)]
-pub enum SelfCommand {
+pub enum ManageCommand {
     Completion(CompletionCommand),
 }
 
-impl SelfCommand {
+impl ManageCommand {
     /// Runs the command.
     pub(crate) async fn run(&self) -> Result<()> {
         match self {
-            SelfCommand::Completion(cmd) => cmd.run().await,
+            ManageCommand::Completion(cmd) => cmd.run().await,
         }
     }
 }
