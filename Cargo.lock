@@ -115,10 +115,7 @@ dependencies = [
 name = "ext-retry"
 version = "0.1.0"
 dependencies = [
- "anyhow",
- "clap",
  "ext-common",
- "tokio",
 ]
 
 [[package]]
