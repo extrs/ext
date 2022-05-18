@@ -13,3 +13,4 @@ name = "ddt"
 path = "src/main.rs"
 
 [dependencies]
+serde = { version = "1.0.137", features = ["derive"] }
