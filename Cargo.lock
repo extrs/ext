@@ -136,6 +136,7 @@ dependencies = [
  "anyhow",
  "clap",
  "clap_complete",
+ "ddt",
  "ext-common",
  "ext-timeout",
  "tokio",

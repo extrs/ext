@@ -8,9 +8,5 @@ name = "ddt"
 repository = "https://github.com/extrs/ext"
 version = "0.1.0"
 
-[[bin]]
-name = "ddt"
-path = "src/main.rs"
-
 [dependencies]
-serde = { version = "1.0.137", features = ["derive"] }
+serde = {version = "1.0.137", features = ["derive"]}
