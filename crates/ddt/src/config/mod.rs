@@ -1,5 +1,10 @@
 use serde::Deserialize;
 
 /// One config file
-#[derive(Debug, Deserialize)]
-pub struct DdtConfigFile {}
+#[derive(Debug, Clone, Deserialize)]
+pub struct DdtConfigFile {
+    rules: Vec<DdtRule>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct DdtRule {}
