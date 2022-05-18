@@ -2,7 +2,10 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use ext_common::init_logger;
 use ext_timeout::TimeoutCommand;
-use extrs_self::SelfCommand;
+
+use self::manage::SelfCommand;
+
+mod manage;
 
 #[derive(Debug, Parser)]
 #[clap(name = "extrs")]

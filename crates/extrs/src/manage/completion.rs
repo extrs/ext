@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::Args;
 
+/// Generates completion scripts for the shell.
 #[derive(Debug, Args)]
 pub struct CompletionCommand {}
 

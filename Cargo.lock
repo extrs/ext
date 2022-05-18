@@ -128,16 +128,7 @@ dependencies = [
  "clap",
  "ext-common",
  "ext-timeout",
- "extrs-self",
  "tokio",
-]
-
-[[package]]
-name = "extrs-self"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
 ]
 
 [[package]]
