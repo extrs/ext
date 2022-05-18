@@ -1,3 +1,5 @@
+pub mod condition;
+
 use serde::Deserialize;
 
 /// One config file
