@@ -9,7 +9,7 @@ repository = "https://github.com/extrs/ext"
 version = "0.1.0"
 
 [[bin]]
-name = "timeout"
+name = "ext-timeout"
 path = "src/main.rs"
 
 [dependencies]
