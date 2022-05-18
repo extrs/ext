@@ -43,10 +43,7 @@ fn main() -> Result<()> {
     let _t = thread::spawn(move || {
         let res = (|| {
             let mut cmd = Command::new(&args.command[0]);
-            for (i, arg) in args.command.iter().enumerate() {
-                if i == 0 {
-                    continue;
-                }
+            for arg in args.command.iter().skip(1) {
                 cmd.arg(arg);
             }
 
