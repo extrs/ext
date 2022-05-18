@@ -11,3 +11,8 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.57"
+clap = {version = "3.1.18", features = ["derive"]}
+ext-common = {version = "0.1.1", path = "../ext-common"}
+ext-timeout = {version = "0.1.1", path = "../ext-timeout"}
+tokio = {version = "1.18.2", features = ["rt", "process", "macros", "rt-multi-thread", "sync", "time"]}

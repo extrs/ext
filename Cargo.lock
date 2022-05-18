@@ -123,6 +123,13 @@ dependencies = [
 [[package]]
 name = "extrs"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "ext-common",
+ "ext-timeout",
+ "tokio",
+]
 
 [[package]]
 name = "hashbrown"
