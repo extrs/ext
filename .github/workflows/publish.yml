@@ -1,0 +1,106 @@
+name: Publish
+
+env:
+  MACOSX_DEPLOYMENT_TARGET: "10.13"
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_RELEASE_LTO: "fat"
+
+on:
+  push:
+    branches:
+      - ci
+      - main
+    tags:
+      - v*
+
+jobs:
+  build:
+    if: ${{ startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/ci' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Currently we only provide prebuilt binaries for some platforms.
+        #
+        # We should support (at least) m1 mac + all platforms used by github actions.
+        settings:
+          - host: macos-latest
+            target: x86_64-apple-darwin
+          - host: windows-latest
+            target: x86_64-pc-windows-msvc
+          # - host: windows-latest
+          #   target: i686-pc-windows-msvc
+          - host: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          # - host: ubuntu-latest
+          #   target: x86_64-unknown-linux-musl
+          - host: macos-latest
+            target: aarch64-apple-darwin
+          # - host: ubuntu-latest
+          #   target: aarch64-unknown-linux-gnu
+          # - host: ubuntu-18.04
+          #   target: armv7-unknown-linux-gnueabihf
+          # - host: ubuntu-latest
+          #   target: aarch64-linux-android
+          # - host: ubuntu-latest
+          #   target: armv7-linux-androideabi
+          # - host: ubuntu-latest
+          #   target: aarch64-unknown-linux-musl
+          # - host: windows-latest
+          #   target: aarch64-pc-windows-msvc
+    name: Build - ${{ matrix.settings.target }}
+    runs-on: ${{ matrix.settings.host }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          target: ${{ matrix.settings.target }}
+
+      - uses: Swatinem/rust-cache@v1
+        with:
+          cache-on-failure: true
+          sharedKey: publish-${{ matrix.settings.target }}
+
+      - name: Build
+        shell: bash
+        run: |
+          cargo build --release --target ${{ matrix.settings.target }}
+
+      - name: List files
+        shell: bash
+        run: |
+          ls -alHR target/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries-${{ matrix.settings.target }}
+          path: |
+            target/${{ matrix.settings.target }}/release/ext-timeout
+            target/${{ matrix.settings.target }}/release/ext-timeout.exe
+          if-no-files-found: error
+
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: List binaries
+        run: ls -R artifacts
+        shell: bash
+
+      - name: Create github release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            artifacts/
