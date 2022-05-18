@@ -1,6 +1,8 @@
-pub mod condition;
-
 use serde::Deserialize;
+
+use self::condition::Condition;
+
+pub mod condition;
 
 /// One config file
 #[derive(Debug, Clone, Deserialize)]
@@ -19,5 +21,5 @@ pub struct Rule {
 #[serde(rename_all = "camelCase")]
 pub struct RuleAction {
     #[serde(rename = "if")]
-    if_: Condition,
+    pub(crate) if_: Condition,
 }
