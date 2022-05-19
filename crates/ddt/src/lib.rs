@@ -69,6 +69,7 @@ impl Server {
                 watcher.watch(&**server.root_dir, RecursiveMode::Recursive)?;
 
                 loop {
+                    // TODO: Optimize
                     if let Ok(event) = watch_receiver.try_recv() {
                         event_sender.send(Event::FileChange(Arc::new(event)))?;
                     }
@@ -87,6 +88,7 @@ impl Server {
                 while let Some(event) = event_receiver.recv().await {
                     match event {
                         Event::Kill => {
+                            event_receiver.close();
                             let _ = term_sender.send(());
                             return Ok(());
                         }
@@ -114,9 +116,13 @@ impl Server {
         Ok(())
     }
 
-    pub fn kill(&self) -> Result<()> {
+    pub async fn kill(&self) -> Result<()> {
         self.event_sender
             .send(Event::Kill)
-            .context("failed to kill")
+            .context("failed to kill")?;
+
+        yield_now().await;
+
+        Ok(())
     }
 }

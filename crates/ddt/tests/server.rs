@@ -10,7 +10,7 @@ async fn start(root_dir: impl AsRef<Path>) -> Arc<Server> {
 async fn test_1() {
     let server = start("tests/server/1").await;
 
-    let res = server.kill();
+    let res = server.kill().await;
 
     res.unwrap();
 }
