@@ -65,7 +65,7 @@ impl Server {
             }
         });
 
-        let _ = tokio::spawn(async move {
+        tokio::spawn(async move {
             while let Some(event) = event_receiver.recv().await {
                 self.handle_event(event).await?;
             }
@@ -76,7 +76,8 @@ impl Server {
             }
 
             Ok(())
-        });
+        })
+        .await??;
 
         Ok(())
     }
