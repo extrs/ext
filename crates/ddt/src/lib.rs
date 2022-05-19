@@ -72,7 +72,7 @@ impl Server {
 
             // type ann
             if false {
-                return Err((anyhow!("")));
+                return Err(anyhow!(""));
             }
 
             Ok(())
