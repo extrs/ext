@@ -8,7 +8,7 @@ use anyhow::{anyhow, Context, Result};
 use handler::FileHandler;
 use notify::{RecursiveMode, Watcher};
 use rustc_hash::FxHashMap;
-use tokio::{task::spawn_blocking, try_join};
+use tokio::{sync::Mutex, task::spawn_blocking, try_join};
 
 pub mod config;
 mod config_file;
@@ -21,12 +21,12 @@ mod handler;
 pub struct Server {
     root_dir: Arc<PathBuf>,
 
-    handlers: FxHashMap<Arc<PathBuf>, FileHandler>,
+    handlers: Mutex<FxHashMap<Arc<PathBuf>, FileHandler>>,
 }
 
 #[derive(Debug)]
 enum Event {
-    FileChange(notify::DebouncedEvent),
+    FileChange(Arc<notify::DebouncedEvent>),
 }
 
 impl Server {
@@ -58,7 +58,7 @@ impl Server {
                 watcher.watch(&**server.root_dir, RecursiveMode::Recursive)?;
 
                 while let Ok(event) = watch_receiver.recv() {
-                    event_sender.send(Event::FileChange(event))?;
+                    event_sender.send(Event::FileChange(Arc::new(event)))?;
                 }
 
                 Ok(())
