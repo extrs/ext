@@ -10,7 +10,7 @@ use notify::{RecursiveMode, Watcher};
 use rustc_hash::FxHashMap;
 use tokio::{
     sync::{mpsc::UnboundedSender, Mutex},
-    task::spawn_blocking,
+    task::{spawn_blocking, yield_now},
     try_join,
 };
 
@@ -68,19 +68,19 @@ impl Server {
 
                 watcher.watch(&**server.root_dir, RecursiveMode::Recursive)?;
 
-                while let Ok(event) = watch_receiver.recv() {
-                    while let Ok(..) = term_receiver.try_recv() {
-                        return Ok(());
+                loop {
+                    if let Ok(event) = watch_receiver.try_recv() {
+                        event_sender.send(Event::FileChange(Arc::new(event)))?;
                     }
 
-                    event_sender.send(Event::FileChange(Arc::new(event)))?;
+                    if let Ok(..) = term_receiver.try_recv() {
+                        return Ok(());
+                    }
                 }
-
-                Ok(())
             }
         });
 
-        let _ = tokio::spawn({
+        let _ = tokio::task::spawn({
             let server = server.clone();
 
             async move {
@@ -104,6 +104,8 @@ impl Server {
                 Ok(())
             }
         });
+
+        yield_now().await;
 
         Ok(server)
     }

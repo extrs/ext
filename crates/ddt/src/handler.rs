@@ -1,6 +1,7 @@
 use std::{path::PathBuf, sync::Arc};
 
 use anyhow::{anyhow, Result};
+use tokio::task::yield_now;
 
 /// Handles one `ddt.yml` file.
 #[derive(Debug)]
@@ -25,7 +26,7 @@ impl FileHandler {
             event_sender,
         });
 
-        tokio::spawn({
+        tokio::task::spawn({
             let server = server.clone();
             async move {
                 while let Some(event) = event_receiver.recv().await {
@@ -40,6 +41,8 @@ impl FileHandler {
                 Ok(())
             }
         });
+
+        yield_now().await;
 
         Ok(server)
     }
