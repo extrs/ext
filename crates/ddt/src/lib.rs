@@ -6,7 +6,7 @@ use std::{
 
 use anyhow::{anyhow, Context, Result};
 use handler::FileHandler;
-use notify::{RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{RecursiveMode, Watcher};
 use rustc_hash::FxHashMap;
 use tokio::{task::spawn_blocking, try_join};
 
