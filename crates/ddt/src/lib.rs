@@ -4,10 +4,11 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use handler::FileHandler;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use rustc_hash::FxHashMap;
+use tokio::{task::spawn_blocking, try_join};
 
 pub mod config;
 mod config_file;
@@ -21,16 +22,15 @@ pub struct Server {
     root_dir: Arc<PathBuf>,
 
     handlers: FxHashMap<Arc<PathBuf>, FileHandler>,
+}
 
-    watcher: Option<RecommendedWatcher>,
-
-    watch_receiver: std::sync::mpsc::Receiver<notify::DebouncedEvent>,
+#[derive(Debug)]
+enum Event {
+    FileChange(notify::DebouncedEvent),
 }
 
 impl Server {
     pub fn new(root_dir: &Path) -> Result<Self> {
-        let (watch_sender, watch_receiver) = std::sync::mpsc::channel();
-
         let root_dir = root_dir
             .canonicalize()
             .map(Arc::new)
@@ -39,20 +39,54 @@ impl Server {
         // TODO: Find all `ddt.yml` files in the root directory.
         let handlers = Default::default();
 
-        // TODO: Allow disabling watch
-        let mut watcher = notify::watcher(watch_sender, Duration::from_secs(1))?;
-
-        watcher.watch(&**root_dir, RecursiveMode::Recursive)?;
-
-        Ok(Self {
-            root_dir,
-            handlers,
-            watcher: Some(watcher),
-            watch_receiver,
-        })
+        Ok(Self { root_dir, handlers })
     }
 
-    pub async fn run(&self) -> Result<()> {
+    pub async fn run(self: Arc<Self>) -> Result<()> {
+        let (event_sender, mut event_receiver) = tokio::sync::mpsc::unbounded_channel();
+
+        let watcher_future = spawn_blocking({
+            let server = self.clone();
+            let event_sender = event_sender.clone();
+
+            move || -> Result<_> {
+                let (watch_sender, watch_receiver) = std::sync::mpsc::channel();
+
+                // TODO: Allow disabling watch
+                let mut watcher = notify::watcher(watch_sender, Duration::from_secs(1))?;
+
+                watcher.watch(&**server.root_dir, RecursiveMode::Recursive)?;
+
+                while let Ok(event) = watch_receiver.recv() {
+                    event_sender.send(Event::FileChange(event))?;
+                }
+
+                Ok(())
+            }
+        });
+
+        let handler_future = tokio::spawn(async move {
+            while let Some(event) = event_receiver.recv().await {
+                self.handle_event(event).await?;
+            }
+
+            // type ann
+            if false {
+                return Err((anyhow!("")));
+            }
+
+            Ok(())
+        });
+
+        let (wr, hr) = try_join!(watcher_future, handler_future)?;
+
+        hr?;
+        wr?;
+
+        Ok(())
+    }
+
+    async fn handle_event(self: &Arc<Self>, event: Event) -> Result<()> {
         Ok(())
     }
 }
