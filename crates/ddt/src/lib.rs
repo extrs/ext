@@ -80,7 +80,7 @@ impl Server {
             }
         });
 
-        tokio::spawn({
+        let _ = tokio::spawn({
             let server = server.clone();
 
             async move {
@@ -103,8 +103,7 @@ impl Server {
 
                 Ok(())
             }
-        })
-        .await??;
+        });
 
         Ok(server)
     }
