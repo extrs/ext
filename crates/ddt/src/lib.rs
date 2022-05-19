@@ -54,6 +54,8 @@ impl Server {
             handlers,
         });
 
+        let (term_sender, mut term_receiver) = tokio::sync::oneshot::channel();
+
         let _ = spawn_blocking({
             let server = server.clone();
             let event_sender = event_sender.clone();
@@ -67,6 +69,10 @@ impl Server {
                 watcher.watch(&**server.root_dir, RecursiveMode::Recursive)?;
 
                 while let Ok(event) = watch_receiver.recv() {
+                    while let Ok(..) = term_receiver.try_recv() {
+                        return Ok(());
+                    }
+
                     event_sender.send(Event::FileChange(Arc::new(event)))?;
                 }
 
@@ -79,7 +85,15 @@ impl Server {
 
             async move {
                 while let Some(event) = event_receiver.recv().await {
-                    server.handle_event(event).await?;
+                    match event {
+                        Event::Kill => {
+                            let _ = term_sender.send(());
+                            return Ok(());
+                        }
+                        _ => {
+                            server.handle_event(event).await?;
+                        }
+                    }
                 }
 
                 // type ann
@@ -99,7 +113,7 @@ impl Server {
         Ok(())
     }
 
-    pub async fn kill(&self) -> Result<()> {
+    pub fn kill(&self) -> Result<()> {
         self.event_sender
             .send(Event::Kill)
             .context("failed to kill")
