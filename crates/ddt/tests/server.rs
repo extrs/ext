@@ -11,5 +11,6 @@ async fn test_1() {
     let server = start("tests/server/1").await;
 
     let res = server.kill();
-    panic!("{:?}", res);
+
+    res.unwrap();
 }
