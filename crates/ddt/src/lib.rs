@@ -45,7 +45,7 @@ impl Server {
     pub async fn run(self: Arc<Self>) -> Result<()> {
         let (event_sender, mut event_receiver) = tokio::sync::mpsc::unbounded_channel();
 
-        let watcher_future = spawn_blocking({
+        let _ = spawn_blocking({
             let server = self.clone();
             let event_sender = event_sender.clone();
 
@@ -65,7 +65,7 @@ impl Server {
             }
         });
 
-        let handler_future = tokio::spawn(async move {
+        let _ = tokio::spawn(async move {
             while let Some(event) = event_receiver.recv().await {
                 self.handle_event(event).await?;
             }
@@ -77,11 +77,6 @@ impl Server {
 
             Ok(())
         });
-
-        let (wr, hr) = try_join!(watcher_future, handler_future)?;
-
-        hr?;
-        wr?;
 
         Ok(())
     }
