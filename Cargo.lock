@@ -111,6 +111,7 @@ dependencies = [
 name = "ddt"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "notify",
  "rustc-hash",
  "serde",
