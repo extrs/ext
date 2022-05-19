@@ -9,4 +9,6 @@ repository = "https://github.com/extrs/ext"
 version = "0.1.0"
 
 [dependencies]
+notify = "4.0.17"
+rustc-hash = "1.1.0"
 serde = {version = "1.0.137", features = ["derive"]}
