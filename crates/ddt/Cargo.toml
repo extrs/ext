@@ -10,6 +10,7 @@ version = "0.1.0"
 
 [dependencies]
 anyhow = "1.0.57"
+ctrlc = "3.2.2"
 notify = "4.0.17"
 rayon = "1.5.3"
 rustc-hash = "1.1.0"

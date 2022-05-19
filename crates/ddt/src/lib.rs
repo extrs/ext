@@ -8,7 +8,11 @@ use anyhow::{anyhow, Context, Result};
 use handler::FileHandler;
 use notify::{RecursiveMode, Watcher};
 use rustc_hash::FxHashMap;
-use tokio::{sync::Mutex, task::spawn_blocking, try_join};
+use tokio::{
+    sync::{mpsc::UnboundedSender, Mutex},
+    task::spawn_blocking,
+    try_join,
+};
 
 pub mod config;
 mod config_file;
@@ -21,16 +25,19 @@ mod handler;
 pub struct Server {
     root_dir: Arc<PathBuf>,
 
-    handlers: Mutex<FxHashMap<Arc<PathBuf>, FileHandler>>,
+    event_sender: UnboundedSender<Event>,
+
+    handlers: Mutex<FxHashMap<Arc<PathBuf>, Arc<FileHandler>>>,
 }
 
 #[derive(Debug)]
 enum Event {
+    Kill,
     FileChange(Arc<notify::DebouncedEvent>),
 }
 
 impl Server {
-    pub fn new(root_dir: &Path) -> Result<Self> {
+    pub async fn run(root_dir: &Path) -> Result<Arc<Self>> {
         let root_dir = root_dir
             .canonicalize()
             .map(Arc::new)
@@ -39,14 +46,16 @@ impl Server {
         // TODO: Find all `ddt.yml` files in the root directory.
         let handlers = Default::default();
 
-        Ok(Self { root_dir, handlers })
-    }
-
-    pub async fn run(self: Arc<Self>) -> Result<()> {
         let (event_sender, mut event_receiver) = tokio::sync::mpsc::unbounded_channel();
 
+        let server = Arc::new(Self {
+            root_dir,
+            event_sender: event_sender.clone(),
+            handlers,
+        });
+
         let _ = spawn_blocking({
-            let server = self.clone();
+            let server = server.clone();
             let event_sender = event_sender.clone();
 
             move || -> Result<_> {
@@ -65,24 +74,34 @@ impl Server {
             }
         });
 
-        tokio::spawn(async move {
-            while let Some(event) = event_receiver.recv().await {
-                self.handle_event(event).await?;
-            }
+        tokio::spawn({
+            let server = server.clone();
 
-            // type ann
-            if false {
-                return Err(anyhow!(""));
-            }
+            async move {
+                while let Some(event) = event_receiver.recv().await {
+                    server.handle_event(event).await?;
+                }
 
-            Ok(())
+                // type ann
+                if false {
+                    return Err(anyhow!(""));
+                }
+
+                Ok(())
+            }
         })
         .await??;
 
-        Ok(())
+        Ok(server)
     }
 
     async fn handle_event(self: &Arc<Self>, event: Event) -> Result<()> {
         Ok(())
+    }
+
+    pub async fn kill(&self) -> Result<()> {
+        self.event_sender
+            .send(Event::Kill)
+            .context("failed to kill")
     }
 }
