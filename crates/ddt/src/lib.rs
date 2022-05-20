@@ -9,9 +9,8 @@ use handler::FileHandler;
 use notify::{RecursiveMode, Watcher};
 use rustc_hash::FxHashMap;
 use tokio::{
-    sync::{mpsc::UnboundedSender, Mutex},
+    sync::{mpsc::UnboundedSender, RwLock},
     task::{spawn_blocking, yield_now},
-    try_join,
 };
 
 pub mod config;
@@ -27,7 +26,7 @@ pub struct Server {
 
     event_sender: UnboundedSender<Event>,
 
-    handlers: Mutex<FxHashMap<Arc<PathBuf>, Arc<FileHandler>>>,
+    handlers: RwLock<FxHashMap<Arc<PathBuf>, Arc<FileHandler>>>,
 }
 
 #[derive(Debug)]
