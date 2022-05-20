@@ -5,7 +5,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Context, Result};
-use handler::FileHandler;
+use handler::{FileHandler, FileHandlerEvent};
 use notify::{RecursiveMode, Watcher};
 use rustc_hash::FxHashMap;
 use tokio::{
@@ -115,7 +115,28 @@ impl Server {
     }
 
     async fn handle_event(self: &Arc<Self>, event: Event) -> Result<()> {
-        Ok(())
+        match event {
+            Event::Kill => {
+                // Kill all file handlers
+
+                for handler in self.handlers.read().await.values() {
+                    handler.send(FileHandlerEvent::Kill).await?;
+                }
+
+                Ok(())
+            }
+            Event::FileChange(e) => {
+                // Dispatch event to file handlers
+
+                for handler in self.handlers.read().await.values() {
+                    handler
+                        .send(FileHandlerEvent::FileChange(e.clone()))
+                        .await?;
+                }
+
+                Ok(())
+            }
+        }
     }
 
     pub async fn kill(&self) -> Result<()> {

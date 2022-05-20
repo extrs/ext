@@ -8,11 +8,12 @@ use tokio::task::yield_now;
 pub struct FileHandler {
     ddt_file: Arc<PathBuf>,
 
-    event_sender: tokio::sync::mpsc::UnboundedSender<ScopedEvent>,
+    event_sender: tokio::sync::mpsc::UnboundedSender<FileHandlerEvent>,
 }
 
 #[derive(Debug)]
-pub(crate) enum ScopedEvent {
+pub(crate) enum FileHandlerEvent {
+    Kill,
     /// File change event
     FileChange(Arc<notify::DebouncedEvent>),
 }
@@ -47,11 +48,15 @@ impl FileHandler {
         Ok(server)
     }
 
-    pub(crate) async fn send(self: Arc<Self>, event: ScopedEvent) -> Result<()> {
+    pub(crate) async fn send(&self, event: FileHandlerEvent) -> Result<()> {
+        self.event_sender.send(event)?;
+
+        yield_now().await;
+
         Ok(())
     }
 
-    async fn handle_event(self: &Arc<Self>, event: ScopedEvent) -> Result<()> {
+    async fn handle_event(self: &Arc<Self>, event: FileHandlerEvent) -> Result<()> {
         Ok(())
     }
 }
