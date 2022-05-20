@@ -1,0 +1,20 @@
+actions:
+  - id: web-app
+    stdin: false
+    name: "Next.js dev server"
+    steps:
+      - name: "Run"
+        run: |
+          yarn dev
+
+events:
+  - id: rust-file-change
+    listOnly: true
+    files: "**/*.rs"
+
+rules:
+  - name: "Foo"
+    if: ${{ events.rust-file-change }}
+    steps:
+      - name: "Remove previous files"
+        run: rm -rf .next

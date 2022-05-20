@@ -1,0 +1,18 @@
+[package]
+authors = ["강동윤 <kdy1997.dev@gmail.com>"]
+description = "Coreutils for 2022"
+edition = "2021"
+include = ["Cargo.toml", "src/**/*.rs"]
+license = "Apache-2.0"
+name = "ddt"
+repository = "https://github.com/extrs/ext"
+version = "0.1.0"
+
+[dependencies]
+anyhow = "1.0.57"
+ctrlc = "3.2.2"
+notify = "4.0.17"
+rayon = "1.5.3"
+rustc-hash = "1.1.0"
+serde = {version = "1.0.137", features = ["derive"]}
+tokio = { version = "1.18.2", features = ["macros", "rt", "sync", "rt-multi-thread"] }
