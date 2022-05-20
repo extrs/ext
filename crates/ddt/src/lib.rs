@@ -48,7 +48,7 @@ impl Server {
         let (event_sender, mut event_receiver) = tokio::sync::mpsc::unbounded_channel();
 
         let server = Arc::new(Self {
-            root_dir,
+            root_dir: root_dir.clone(),
             event_sender: event_sender.clone(),
             handlers,
         });
@@ -56,7 +56,7 @@ impl Server {
         let (term_sender, mut term_receiver) = tokio::sync::oneshot::channel();
 
         let _ = spawn_blocking({
-            let server = server.clone();
+            let root_dir = root_dir.clone();
             let event_sender = event_sender.clone();
 
             move || -> Result<_> {
@@ -65,7 +65,7 @@ impl Server {
                 // TODO: Allow disabling watch
                 let mut watcher = notify::watcher(watch_sender, Duration::from_secs(1))?;
 
-                watcher.watch(&**server.root_dir, RecursiveMode::Recursive)?;
+                watcher.watch(&**root_dir, RecursiveMode::Recursive)?;
 
                 loop {
                     if let Ok(event) = watch_receiver.recv_timeout(Duration::from_millis(50)) {
