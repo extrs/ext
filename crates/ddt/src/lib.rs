@@ -68,8 +68,7 @@ impl Server {
                 watcher.watch(&**server.root_dir, RecursiveMode::Recursive)?;
 
                 loop {
-                    // TODO: Optimize
-                    if let Ok(event) = watch_receiver.try_recv() {
+                    if let Ok(event) = watch_receiver.recv_timeout(Duration::from_millis(50)) {
                         event_sender.send(Event::FileChange(Arc::new(event)))?;
                     }
 
