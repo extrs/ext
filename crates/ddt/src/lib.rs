@@ -84,10 +84,14 @@ impl Server {
 
             async move {
                 while let Some(event) = event_receiver.recv().await {
-                    match event {
+                    match &event {
                         Event::Kill => {
                             event_receiver.close();
                             let _ = term_sender.send(());
+
+                            // Kill file handlers
+                            server.handle_event(event).await?;
+
                             return Ok(());
                         }
                         _ => {
