@@ -95,7 +95,14 @@ impl Server {
                             return Ok(());
                         }
                         _ => {
-                            server.handle_event(event).await?;
+                            let _ = tokio::spawn({
+                                let server = server.clone();
+                                async move {
+                                    let res = server.handle_event(event).await;
+
+                                    dbg!(&res);
+                                }
+                            });
                         }
                     }
                 }
@@ -133,6 +140,8 @@ impl Server {
                         .send(FileHandlerEvent::FileChange(e.clone()))
                         .await?;
                 }
+
+                // TODO: Check if the file is a `ddt.yml` file.
 
                 Ok(())
             }
