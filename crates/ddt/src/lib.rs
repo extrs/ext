@@ -103,6 +103,8 @@ impl Server {
                                     dbg!(&res);
                                 }
                             });
+
+                            yield_now().await;
                         }
                     }
                 }
